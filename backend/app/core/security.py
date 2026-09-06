@@ -23,6 +23,10 @@ class CurrentUser(BaseModel):
         return permission.value in self.permissions
 
 
+UserContext = CurrentUser
+
+
+
 # Demo User Profiles Fallback when running local offline dev or testing without live JWT
 DEMO_USER_PROFILES = {
     "admin@qswarm.io": {

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, Numeric, DateTime, ForeignKey, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 import uuid
 
 from app.infrastructure.database.session import Base
@@ -43,4 +43,5 @@ class NetworkEdge(Base):
     speed_limit_kph = Column(Numeric, default=50)
     road_type = Column(String, default="PRIMARY")
     capacity_vehicles = Column(Integer, default=200)
+    geometry = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
