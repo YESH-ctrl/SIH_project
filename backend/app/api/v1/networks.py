@@ -28,11 +28,10 @@ router = APIRouter(prefix="/networks", tags=["Road Network & OSM Module"])
 )
 async def import_osm_network(
     req: NetworkImportRequest,
-    user: UserContext = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    user: UserContext = Depends(get_current_user)
 ):
     """Import OpenStreetMap road network for a configurable city and persist to Supabase."""
-    service = NetworkService(db)
+    service = NetworkService(db=None)
     try:
         stats = await service.import_osm_network(
             organization_id=user.organization_id,
@@ -54,11 +53,10 @@ async def import_osm_network(
     dependencies=[Depends(require_permission(Permission.NETWORK_VIEW))]
 )
 async def get_networks(
-    user: UserContext = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    user: UserContext = Depends(get_current_user)
 ):
     """List all imported road networks for the authenticated user's organization."""
-    service = NetworkService(db)
+    service = NetworkService(db=None)
     return await service.get_networks(user.organization_id)
 
 
@@ -69,11 +67,10 @@ async def get_networks(
 )
 async def get_network_by_id(
     network_id: str,
-    user: UserContext = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    user: UserContext = Depends(get_current_user)
 ):
     """Get details of a specific road network."""
-    service = NetworkService(db)
+    service = NetworkService(db=None)
     net = await service.get_network(network_id, user.organization_id)
     if not net:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Road network not found")
@@ -87,11 +84,10 @@ async def get_network_by_id(
 )
 async def get_network_stats(
     network_id: str,
-    user: UserContext = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    user: UserContext = Depends(get_current_user)
 ):
     """Get topological and travel-time weight statistics for a road network."""
-    service = NetworkService(db)
+    service = NetworkService(db=None)
     try:
         return await service.get_network_stats(network_id, user.organization_id)
     except Exception as e:
@@ -106,12 +102,11 @@ async def get_network_stats(
 async def get_network_nodes(
     network_id: str,
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=50, ge=1, le=500),
-    user: UserContext = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    page_size: int = Query(default=50, ge=1, le=50000),
+    user: UserContext = Depends(get_current_user)
 ):
     """Get paginated node intersection list for a road network."""
-    service = NetworkService(db)
+    service = NetworkService(db=None)
     return await service.get_nodes(network_id, page=page, page_size=page_size)
 
 
@@ -123,12 +118,11 @@ async def get_network_nodes(
 async def get_network_edges(
     network_id: str,
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=50, ge=1, le=500),
-    user: UserContext = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    page_size: int = Query(default=50, ge=1, le=50000),
+    user: UserContext = Depends(get_current_user)
 ):
     """Get paginated road edge segment list for a road network."""
-    service = NetworkService(db)
+    service = NetworkService(db=None)
     return await service.get_edges(network_id, page=page, page_size=page_size)
 
 
@@ -140,12 +134,12 @@ async def get_network_edges(
 async def calculate_shortest_path_route(
     network_id: str,
     req: ShortestPathRouteRequest,
-    user: UserContext = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    user: UserContext = Depends(get_current_user)
 ):
     """Calculate shortest-path route between source and destination using static free-flow travel time."""
-    service = NetworkService(db)
+    service = NetworkService(db=None)
     try:
         return await service.calculate_shortest_path(network_id, user.organization_id, req)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+

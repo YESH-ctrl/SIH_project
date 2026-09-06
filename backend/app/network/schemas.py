@@ -1,4 +1,5 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
+from uuid import UUID
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -10,8 +11,8 @@ class NetworkImportRequest(BaseModel):
 
 
 class RoadNetworkDTO(BaseModel):
-    id: str
-    organization_id: str
+    id: Union[UUID, str]
+    organization_id: Union[UUID, str]
     name: str
     source: str = "OSM"
     version: str = "v1.0"
@@ -22,8 +23,8 @@ class RoadNetworkDTO(BaseModel):
 
 
 class NetworkNodeDTO(BaseModel):
-    id: str
-    network_id: str
+    id: Union[UUID, str]
+    network_id: Union[UUID, str]
     external_id: Optional[str] = None
     lat: float
     lng: float
@@ -33,11 +34,11 @@ class NetworkNodeDTO(BaseModel):
 
 
 class NetworkEdgeDTO(BaseModel):
-    id: str
-    network_id: str
+    id: Union[UUID, str]
+    network_id: Union[UUID, str]
     external_id: Optional[str] = None
-    from_node_id: Optional[str] = None
-    to_node_id: Optional[str] = None
+    from_node_id: Optional[Union[UUID, str]] = None
+    to_node_id: Optional[Union[UUID, str]] = None
     road_name: str
     length_meters: float
     speed_limit_kph: float
