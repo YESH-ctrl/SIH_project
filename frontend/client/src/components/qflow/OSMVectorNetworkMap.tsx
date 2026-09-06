@@ -3,7 +3,7 @@ import * as maplibregl from "maplibre-gl";
 import type { Feature, FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { NetworkNodeDTO, NetworkEdgeDTO, ShortestPathRouteResponse } from "@/services/apiClient";
-import { Layers, ZoomIn, ZoomOut, Maximize2, RotateCcw, Activity } from "lucide-react";
+import { Layers, ZoomIn, ZoomOut, Maximize2, RotateCcw, Activity, AlertCircle } from "lucide-react";
 
 
 interface OSMVectorNetworkMapProps {
@@ -13,6 +13,7 @@ interface OSMVectorNetworkMapProps {
   selectedNode: NetworkNodeDTO | null;
   routeResponse: ShortestPathRouteResponse | null;
   layerVisibility: {
+    basemap: boolean;
     roadNetwork: boolean;
     nodes: boolean;
     route: boolean;
@@ -37,46 +38,57 @@ export function OSMVectorNetworkMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [basemapUnavailable, setBasemapUnavailable] = useState(false);
 
-  // 1. Initialize MapLibre GL Map Instance
+  // 1. Initialize MapLibre GL Map Instance with OpenStreetMap Tiles
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Dark control-center style
-    const darkStyle: maplibregl.StyleSpecification = {
+    // OpenStreetMap Style with vibrant bright raster presentation
+    const osmStyle: maplibregl.StyleSpecification = {
       version: 8,
       sources: {
-        "carto-dark": {
+        "osm-tiles": {
           type: "raster",
-          tiles: [
-            "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-            "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-            "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-          ],
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
           tileSize: 256,
-          attribution: "&copy; OpenStreetMap &copy; CARTO",
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
         },
       },
       layers: [
         {
-          id: "carto-dark-layer",
+          id: "osm-basemap-layer",
           type: "raster",
-          source: "carto-dark",
+          source: "osm-tiles",
           minzoom: 0,
-          maxzoom: 20,
+          maxzoom: 19,
+          paint: {
+            "raster-opacity": 0.75,
+            "raster-brightness-max": 0.90,
+            "raster-brightness-min": 0.10,
+            "raster-contrast": 0.05,
+            "raster-saturation": -0.20,
+          },
         },
       ],
     };
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: darkStyle,
-      center: [81.6296, 21.2514], // Default to Raipur center
+      style: osmStyle,
+      center: [81.6296, 21.2514], // Default center
       zoom: 13,
       attributionControl: false,
     });
 
     mapRef.current = map;
+
+    // Gracefully handle tile loading failures without blocking graph display
+    map.on("error", (e) => {
+      if (e && e.error && (e.error.message?.includes("tile") || e.error.message?.includes("http"))) {
+        setBasemapUnavailable(true);
+      }
+    });
 
     map.on("load", () => {
       setIsMapLoaded(true);
@@ -97,27 +109,57 @@ export function OSMVectorNetworkMap({
         data: { type: "FeatureCollection", features: [] },
       });
 
-      // Add Edge Layers with Road Classification Visual Hierarchy
+      // 1. Add Edge Casing Layer (Dark background line underneath all Q-FLOW edges for visual pop)
       map.addLayer({
-        id: "edges-base",
+        id: "edges-casing",
         type: "line",
         source: "edges-source",
         paint: {
-          "line-color": "#38bdf8", // Sky Blue Base
-          "line-width": 2.0,
-          "line-opacity": 0.85,
+          "line-color": "#090d16", // Dark casing outline
+          "line-width": 7,
+          "line-opacity": 0.95,
         },
       });
 
+      // 2. Add Primary / Highway Layer (Bright Cyan & 4.5px)
       map.addLayer({
         id: "edges-primary",
         type: "line",
         source: "edges-source",
-        filter: ["in", ["get", "road_type"], ["literal", ["MOTORWAY", "TRUNK", "PRIMARY", "PRIMARY_LINK"]]],
+        filter: ["in", ["get", "road_type"], ["literal", ["MOTORWAY", "TRUNK", "PRIMARY", "PRIMARY_LINK", "MOTORWAY_LINK"]]],
         paint: {
           "line-color": "#00f0ff", // Bright Cyan
-          "line-width": 4.0,
-          "line-opacity": 0.95,
+          "line-width": 4.5,
+          "line-opacity": 1.0,
+        },
+      });
+
+      // 3. Add Secondary / Arterial Layer (Vibrant Purple & 3.5px)
+      map.addLayer({
+        id: "edges-secondary",
+        type: "line",
+        source: "edges-source",
+        filter: ["in", ["get", "road_type"], ["literal", ["SECONDARY", "TERTIARY", "SECONDARY_LINK", "TERTIARY_LINK"]]],
+        paint: {
+          "line-color": "#a855f7", // Vibrant Purple
+          "line-width": 3.5,
+          "line-opacity": 1.0,
+        },
+      });
+
+      // 4. Add Local / Residential Layer (Deep Sky Blue & 2.5px)
+      map.addLayer({
+        id: "edges-local",
+        type: "line",
+        source: "edges-source",
+        filter: [
+          "!",
+          ["in", ["get", "road_type"], ["literal", ["MOTORWAY", "TRUNK", "PRIMARY", "PRIMARY_LINK", "MOTORWAY_LINK", "SECONDARY", "TERTIARY", "SECONDARY_LINK", "TERTIARY_LINK"]]],
+        ],
+        paint: {
+          "line-color": "#0284c7", // Deep Sky Blue
+          "line-width": 2.5,
+          "line-opacity": 0.90,
         },
       });
 
@@ -133,29 +175,29 @@ export function OSMVectorNetworkMap({
         },
       });
 
-      // Add Nodes Layer (visible at zoom >= 8)
+      // Add Nodes Layer (visible at zoom >= 12 to prevent clutter)
       map.addLayer({
         id: "nodes-layer",
         type: "circle",
         source: "nodes-source",
-        minzoom: 8,
+        minzoom: 12,
         paint: {
-          "circle-color": "#0284c7",
-          "circle-radius": 3.0,
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#ffffff",
+          "circle-color": "#00f0ff",
+          "circle-radius": 3.5,
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "#030712",
         },
       });
 
-      // Add Shortest Path Route Layer
+      // Add Shortest Path Route Layer (Much thicker and brighter)
       map.addLayer({
         id: "route-layer-glow",
         type: "line",
         source: "route-source",
         paint: {
           "line-color": "#f59e0b", // Amber Glow
-          "line-width": 8,
-          "line-opacity": 0.35,
+          "line-width": 12,
+          "line-opacity": 0.45,
         },
       });
 
@@ -165,9 +207,8 @@ export function OSMVectorNetworkMap({
         source: "route-source",
         paint: {
           "line-color": "#fbbf24", // Vibrant Amber Core
-          "line-width": 4,
-          "line-opacity": 0.95,
-          "line-dasharray": [2, 1],
+          "line-width": 7,
+          "line-opacity": 1.0,
         },
       });
 
@@ -323,7 +364,7 @@ export function OSMVectorNetworkMap({
     const nodeSource = map.getSource("nodes-source") as maplibregl.GeoJSONSource;
     if (nodeSource) nodeSource.setData(nodesGeoJSON);
 
-    // Fit Bounds if valid bbox calculated
+    // Fit Bounds if valid bbox calculated from Q-FLOW geometry
     if (minLng < maxLng && minLat < maxLat) {
       map.fitBounds(
         [
@@ -365,7 +406,6 @@ export function OSMVectorNetworkMap({
       };
       routeSource.setData(routeGeoJSON);
 
-
       // Auto fit bounds to route
       let minLng = 180,
         maxLng = -180,
@@ -397,15 +437,23 @@ export function OSMVectorNetworkMap({
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
+    // Toggle Basemap
+    if (map.getLayer("osm-basemap-layer")) {
+      map.setLayoutProperty("osm-basemap-layer", "visibility", layerVisibility.basemap ? "visible" : "none");
+    }
+
+    // Toggle Road Network
     const vis = layerVisibility.roadNetwork ? "visible" : "none";
-    ["edges-primary", "edges-secondary", "edges-local", "edges-click-target"].forEach((layerId) => {
+    ["edges-casing", "edges-primary", "edges-secondary", "edges-local", "edges-click-target"].forEach((layerId) => {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis);
     });
 
+    // Toggle Nodes
     if (map.getLayer("nodes-layer")) {
       map.setLayoutProperty("nodes-layer", "visibility", layerVisibility.nodes ? "visible" : "none");
     }
 
+    // Toggle Route
     const routeVis = layerVisibility.route ? "visible" : "none";
     ["route-layer-glow", "route-layer-core"].forEach((layerId) => {
       if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", routeVis);
@@ -439,10 +487,46 @@ export function OSMVectorNetworkMap({
     }
   };
 
+  const isNetworkUnavailable = !isLoading && isMapLoaded && edges.length === 0;
+
   return (
     <div className="relative w-full h-full min-h-[520px] bg-[#07090c] border border-slate-800 rounded-none overflow-hidden select-none font-sans">
       {/* Map Canvas Container */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[520px]" />
+
+      {/* Top-Left Overlay 1: Q-FLOW Network Title & Subtitle Badge */}
+      <div className="absolute top-4 left-4 z-10 p-2.5 bg-[#090b0e]/95 border border-sky-500/40 backdrop-blur text-xs font-mono space-y-0.5 shadow-xl">
+        <div className="text-sky-400 font-bold tracking-wider uppercase flex items-center">
+          <Activity size={13} className="mr-1.5 text-sky-400" /> Q-FLOW NETWORK GRAPH
+        </div>
+        <div className="text-[10px] text-slate-300 font-sans">
+          Raipur • OSM-derived • Directed
+        </div>
+      </div>
+
+      {/* Top-Left Overlay 2: Network Graph Status Badge (Dynamic edge & node count) */}
+      <div className="absolute top-16 left-4 z-10 px-2.5 py-1.5 bg-[#090b0e]/95 border border-slate-800 backdrop-blur text-[11px] font-mono flex items-center space-x-3 shadow-lg">
+        <span className="text-slate-400 font-bold uppercase">GRAPH:</span>
+        <span className="text-sky-400 font-bold">{edges.length.toLocaleString()} EDGES</span>
+        <span className="text-slate-600">|</span>
+        <span className="text-emerald-400 font-bold">{nodes.length.toLocaleString()} NODES</span>
+      </div>
+
+      {/* Overlay Banner if Q-FLOW network edges failed to load */}
+      {isNetworkUnavailable && (
+        <div className="absolute top-28 left-4 z-10 px-3 py-1.5 bg-red-950/90 border border-red-500/60 text-red-400 text-xs font-mono backdrop-blur flex items-center space-x-2 shadow-lg">
+          <AlertCircle size={14} className="text-red-400" />
+          <span className="font-bold uppercase">Q-FLOW network layer unavailable</span>
+        </div>
+      )}
+
+      {/* Subtle Non-Blocking Basemap Unavailable Indicator */}
+      {basemapUnavailable && layerVisibility.basemap && (
+        <div className="absolute bottom-10 left-4 z-10 px-2.5 py-1 bg-[#0d1015]/90 border border-slate-700 text-[11px] font-mono text-slate-300 backdrop-blur flex items-center space-x-1.5 shadow-md">
+          <AlertCircle size={12} className="text-amber-400" />
+          <span>Basemap unavailable</span>
+        </div>
+      )}
 
       {/* Loading Overlay */}
       {isLoading && (
@@ -475,6 +559,11 @@ export function OSMVectorNetworkMap({
         >
           <Maximize2 size={14} />
         </button>
+      </div>
+
+      {/* OpenStreetMap Attribution Badge (Bottom Right, Visible & Uncovered) */}
+      <div className="absolute bottom-2 right-2 z-10 px-2 py-0.5 bg-[#09090e]/90 border border-slate-800 backdrop-blur text-[10px] font-mono text-slate-400">
+        &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-sky-400">OpenStreetMap</a> contributors
       </div>
     </div>
   );

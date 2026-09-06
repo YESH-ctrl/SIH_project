@@ -27,3 +27,9 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+
+# Logs and cache
+.manus-logs/
+cache/
+*.log
+

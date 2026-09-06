@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 from typing import List, Optional, Tuple
@@ -39,7 +40,7 @@ class NetworkRepository:
         """
         org_uuid = uuid.UUID(organization_id) if isinstance(organization_id, str) else organization_id
         
-        # Try SQLAlchemy first if available
+        # Try SQLAlchemy first if available (with fast timeout)
         if self.db:
             try:
                 stmt = select(RoadNetwork).where(
@@ -48,7 +49,7 @@ class NetworkRepository:
                     RoadNetwork.source == source,
                     RoadNetwork.version == version
                 )
-                res = await self.db.execute(stmt)
+                res = await asyncio.wait_for(self.db.execute(stmt), timeout=1.5)
                 existing = res.scalar_one_or_none()
                 if existing:
                     return existing, False
@@ -61,8 +62,8 @@ class NetworkRepository:
                     version=version,
                 )
                 self.db.add(new_net)
-                await self.db.commit()
-                await self.db.refresh(new_net)
+                await asyncio.wait_for(self.db.commit(), timeout=1.5)
+                await asyncio.wait_for(self.db.refresh(new_net), timeout=1.5)
                 return new_net, True
             except Exception as e:
                 print(f"[NetworkRepository] SQLAlchemy error: {e}. Falling back to Supabase REST API.")
@@ -121,14 +122,14 @@ class NetworkRepository:
         """
         if self.db:
             try:
-                await self.db.execute(delete(NetworkEdge).where(NetworkEdge.network_id == network_id))
-                await self.db.execute(delete(NetworkNode).where(NetworkNode.network_id == network_id))
+                await asyncio.wait_for(self.db.execute(delete(NetworkEdge).where(NetworkEdge.network_id == network_id)), timeout=1.5)
+                await asyncio.wait_for(self.db.execute(delete(NetworkNode).where(NetworkNode.network_id == network_id)), timeout=1.5)
 
                 self.db.add_all(nodes)
-                await self.db.flush()
+                await asyncio.wait_for(self.db.flush(), timeout=1.5)
 
                 self.db.add_all(edges)
-                await self.db.commit()
+                await asyncio.wait_for(self.db.commit(), timeout=1.5)
 
                 return len(nodes), len(edges)
             except Exception as e:
@@ -183,7 +184,7 @@ class NetworkRepository:
         if self.db:
             try:
                 stmt = select(RoadNetwork).where(RoadNetwork.organization_id == org_uuid).order_by(RoadNetwork.created_at.desc())
-                res = await self.db.execute(stmt)
+                res = await asyncio.wait_for(self.db.execute(stmt), timeout=1.5)
                 return list(res.scalars().all())
             except Exception:
                 pass
@@ -209,7 +210,7 @@ class NetworkRepository:
         if self.db:
             try:
                 stmt = select(RoadNetwork).where(RoadNetwork.id == net_uuid, RoadNetwork.organization_id == org_uuid)
-                res = await self.db.execute(stmt)
+                res = await asyncio.wait_for(self.db.execute(stmt), timeout=1.5)
                 return res.scalar_one_or_none()
             except Exception:
                 pass
@@ -237,7 +238,7 @@ class NetworkRepository:
                     .offset((page - 1) * page_size)
                     .limit(page_size)
                 )
-                res = await self.db.execute(stmt)
+                res = await asyncio.wait_for(self.db.execute(stmt), timeout=1.5)
                 return list(res.scalars().all())
             except Exception:
                 pass
@@ -269,7 +270,7 @@ class NetworkRepository:
                     .offset((page - 1) * page_size)
                     .limit(page_size)
                 )
-                res = await self.db.execute(stmt)
+                res = await asyncio.wait_for(self.db.execute(stmt), timeout=1.5)
                 return list(res.scalars().all())
             except Exception:
                 pass
@@ -302,7 +303,7 @@ class NetworkRepository:
         if self.db:
             try:
                 stmt = select(NetworkNode).where(NetworkNode.network_id == net_uuid)
-                res = await self.db.execute(stmt)
+                res = await asyncio.wait_for(self.db.execute(stmt), timeout=1.5)
                 return list(res.scalars().all())
             except Exception:
                 pass
@@ -327,7 +328,7 @@ class NetworkRepository:
         if self.db:
             try:
                 stmt = select(NetworkEdge).where(NetworkEdge.network_id == net_uuid)
-                res = await self.db.execute(stmt)
+                res = await asyncio.wait_for(self.db.execute(stmt), timeout=1.5)
                 return list(res.scalars().all())
             except Exception:
                 pass
@@ -352,4 +353,5 @@ class NetworkRepository:
                     for item in r.json()
                 ]
         return []
+
 

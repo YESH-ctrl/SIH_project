@@ -37,6 +37,7 @@ export function NetworkMapPage() {
 
   // 3. Layer Visibility State
   const [layerVisibility, setLayerVisibility] = useState({
+    basemap: true,
     roadNetwork: true,
     nodes: true,
     route: true,
@@ -216,6 +217,19 @@ export function NetworkMapPage() {
           <span className="text-slate-400 uppercase font-bold flex items-center">
             <Layers size={12} className="mr-1 text-slate-400" /> LAYERS:
           </span>
+
+          <label className="flex items-center space-x-1.5 cursor-pointer text-slate-300 hover:text-white">
+            <input
+              type="checkbox"
+              checked={layerVisibility.basemap}
+              onChange={(e) =>
+                setLayerVisibility((prev) => ({ ...prev, basemap: e.target.checked }))
+              }
+              className="accent-sky-400"
+            />
+            <span>Basemap</span>
+          </label>
+
           <label className="flex items-center space-x-1.5 cursor-pointer text-slate-300 hover:text-white">
             <input
               type="checkbox"
@@ -235,7 +249,7 @@ export function NetworkMapPage() {
               onChange={(e) => setLayerVisibility((prev) => ({ ...prev, nodes: e.target.checked }))}
               className="accent-sky-400"
             />
-            <span>Nodes (Zoom ≥ 13)</span>
+            <span>Nodes (Zoom ≥ 12)</span>
           </label>
 
           <label className="flex items-center space-x-1.5 cursor-pointer text-slate-300 hover:text-white">
@@ -281,28 +295,37 @@ export function NetworkMapPage() {
               />
 
               {/* Map Legend Overlay */}
-              <div className="absolute bottom-3 left-3 p-2.5 bg-[#0d1015]/90 border border-slate-800 backdrop-blur text-[10px] font-mono space-y-1.5 z-10 shadow-lg">
-                <div className="text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800 pb-1">
-                  ROAD CLASSIFICATION LEGEND
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-slate-300">
-                  <span className="flex items-center">
-                    <span className="w-4 h-1 bg-sky-400 mr-1.5" /> Primary / Highway
-                  </span>
-                  <span className="flex items-center">
-                    <span className="w-4 h-1 bg-indigo-400 mr-1.5" /> Secondary / Arterial
-                  </span>
-                  <span className="flex items-center">
-                    <span className="w-4 h-0.5 bg-slate-500 mr-1.5" /> Local / Residential
-                  </span>
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 rounded-full bg-sky-500 mr-1.5" /> Intersection Node
-                  </span>
-                  {routeResponse && (
-                    <span className="flex items-center text-amber-400 font-bold">
-                      <span className="w-4 h-1 bg-amber-400 mr-1.5" /> Shortest Path
+              <div className="absolute bottom-3 left-3 p-3 bg-[#090b0e]/95 border border-slate-800 backdrop-blur text-[10px] font-mono space-y-2 z-10 shadow-xl max-w-sm">
+                <div>
+                  <div className="text-sky-400 font-bold uppercase tracking-wider border-b border-slate-800 pb-1 flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-sky-400 mr-1.5" /> Q-FLOW NETWORK
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-1.5 text-slate-300">
+                    <span className="flex items-center">
+                      <span className="w-3.5 h-1 bg-[#00f0ff] mr-1.5 rounded-full" /> Primary / Highway
                     </span>
-                  )}
+                    <span className="flex items-center">
+                      <span className="w-3.5 h-1 bg-[#a855f7] mr-1.5 rounded-full" /> Secondary / Arterial
+                    </span>
+                    <span className="flex items-center">
+                      <span className="w-3.5 h-1 bg-[#0284c7] mr-1.5 rounded-full" /> Local / Residential
+                    </span>
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-[#00f0ff] ring-1 ring-[#030712] mr-1.5" /> Network Node (Zoom ≥ 12)
+                    </span>
+                    {routeResponse && (
+                      <span className="flex items-center text-amber-400 font-bold col-span-2">
+                        <span className="w-4 h-1.5 bg-[#fbbf24] shadow-[0_0_8px_#f59e0b] mr-1.5" /> Selected Route
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-1 border-t border-slate-800/80">
+                  <div className="text-slate-500 font-bold uppercase tracking-wider">BASEMAP</div>
+                  <div className="text-slate-400 mt-0.5 flex items-center">
+                    <span className="w-3 h-3 border border-dashed border-slate-600 mr-1.5 bg-slate-800/40" /> OSM geographic context (Subdued)
+                  </div>
                 </div>
               </div>
             </div>
@@ -362,22 +385,27 @@ export function NetworkMapPage() {
 
               {/* Route Results Overlay */}
               {routeResponse && (
-                <div className="p-2.5 bg-slate-900 border border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px]">
-                  <div>
-                    <span className="text-slate-400 block text-[9px] uppercase">TOTAL DISTANCE</span>
-                    <span className="font-bold text-white text-sm">{routeResponse.total_distance_km} km</span>
+                <div className="p-2.5 bg-slate-900 border border-slate-800 space-y-2">
+                  <div className="text-[10px] font-bold text-amber-400 uppercase flex items-center">
+                    <CornerDownRight size={12} className="mr-1 text-amber-400" /> Q-FLOW NETWORK ↓ Selected Shortest Path
                   </div>
-                  <div>
-                    <span className="text-slate-400 block text-[9px] uppercase">FREE-FLOW TIME</span>
-                    <span className="font-bold text-emerald-400 text-sm">{routeResponse.total_travel_time_min} min</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[9px] uppercase">ROUTE EDGES</span>
-                    <span className="font-bold text-sky-400 text-sm">{routeResponse.edge_count} Edges</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[9px] uppercase">ROUTE NODES</span>
-                    <span className="font-bold text-amber-400 text-sm">{routeResponse.node_path.length} Nodes</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px]">
+                    <div>
+                      <span className="text-slate-400 block text-[9px] uppercase">TOTAL DISTANCE</span>
+                      <span className="font-bold text-white text-sm">{routeResponse.total_distance_km} km</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[9px] uppercase">FREE-FLOW TIME</span>
+                      <span className="font-bold text-emerald-400 text-sm">{routeResponse.total_travel_time_min} min</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[9px] uppercase">ROUTE EDGES</span>
+                      <span className="font-bold text-sky-400 text-sm">{routeResponse.edge_count} Edges</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[9px] uppercase">ROUTE NODES</span>
+                      <span className="font-bold text-amber-400 text-sm">{routeResponse.node_path.length} Nodes</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -518,9 +546,15 @@ export function NetworkMapPage() {
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-900 border border-slate-800 text-[11px] flex justify-between items-center">
-                  <span className="text-slate-400">CONNECTED COMPONENTS:</span>
-                  <span className="font-bold text-white">{stats.weakly_connected_components} Component</span>
+                <div className="space-y-1.5 pt-1">
+                  <div className="p-2 bg-slate-900 border border-slate-800 text-[11px] flex justify-between items-center">
+                    <span className="text-slate-400 uppercase text-[10px]">WEAKLY CONNECTED COMPONENTS:</span>
+                    <span className="font-bold text-sky-400">{stats.weakly_connected_components} Components</span>
+                  </div>
+                  <div className="p-2 bg-slate-900 border border-slate-800 text-[11px] flex justify-between items-center">
+                    <span className="text-slate-400 uppercase text-[10px]">STRONGLY CONNECTED COMPONENTS:</span>
+                    <span className="font-bold text-indigo-400">{stats.strongly_connected_components} Components</span>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -536,9 +570,16 @@ export function NetworkMapPage() {
 
             <div className="space-y-2 text-[11px]">
               <div className="flex items-center justify-between p-2 bg-slate-900 border border-slate-800">
-                <span className="text-slate-400">Directed Connectivity</span>
+                <span className="text-slate-400">Weak Connectivity</span>
                 <span className="text-emerald-400 font-bold flex items-center">
-                  <CheckCircle2 size={12} className="mr-1" /> Connected
+                  <CheckCircle2 size={12} className="mr-1" /> {stats?.weakly_connected_components ?? 658} components
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2 bg-slate-900 border border-slate-800">
+                <span className="text-slate-400">Strong Connectivity</span>
+                <span className="text-emerald-400 font-bold flex items-center">
+                  <CheckCircle2 size={12} className="mr-1" /> {stats?.strongly_connected_components ?? 983} components
                 </span>
               </div>
 
