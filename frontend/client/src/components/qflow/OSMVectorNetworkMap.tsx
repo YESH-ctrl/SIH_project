@@ -99,41 +99,25 @@ export function OSMVectorNetworkMap({
 
       // Add Edge Layers with Road Classification Visual Hierarchy
       map.addLayer({
-        id: "edges-primary",
+        id: "edges-base",
         type: "line",
         source: "edges-source",
-        filter: ["in", ["get", "road_type"], ["literal", ["MOTORWAY", "TRUNK", "PRIMARY"]]],
         paint: {
-          "line-color": "#38bdf8", // Bright Sky Blue
-          "line-width": 3.5,
-          "line-opacity": 0.9,
-        },
-      });
-
-      map.addLayer({
-        id: "edges-secondary",
-        type: "line",
-        source: "edges-source",
-        filter: ["in", ["get", "road_type"], ["literal", ["SECONDARY", "TERTIARY"]]],
-        paint: {
-          "line-color": "#818cf8", // Indigo/Purple
-          "line-width": 2.5,
+          "line-color": "#38bdf8", // Sky Blue Base
+          "line-width": 2.0,
           "line-opacity": 0.85,
         },
       });
 
       map.addLayer({
-        id: "edges-local",
+        id: "edges-primary",
         type: "line",
         source: "edges-source",
-        filter: [
-          "!",
-          ["in", ["get", "road_type"], ["literal", ["MOTORWAY", "TRUNK", "PRIMARY", "SECONDARY", "TERTIARY"]]],
-        ],
+        filter: ["in", ["get", "road_type"], ["literal", ["MOTORWAY", "TRUNK", "PRIMARY", "PRIMARY_LINK"]]],
         paint: {
-          "line-color": "#475569", // Slate
-          "line-width": 1.5,
-          "line-opacity": 0.75,
+          "line-color": "#00f0ff", // Bright Cyan
+          "line-width": 4.0,
+          "line-opacity": 0.95,
         },
       });
 
@@ -144,20 +128,20 @@ export function OSMVectorNetworkMap({
         source: "edges-source",
         paint: {
           "line-color": "#ffffff",
-          "line-width": 12,
+          "line-width": 14,
           "line-opacity": 0,
         },
       });
 
-      // Add Nodes Layer (visible at zoom >= 13)
+      // Add Nodes Layer (visible at zoom >= 8)
       map.addLayer({
         id: "nodes-layer",
         type: "circle",
         source: "nodes-source",
-        minzoom: 13,
+        minzoom: 8,
         paint: {
           "circle-color": "#0284c7",
-          "circle-radius": 3.5,
+          "circle-radius": 3.0,
           "circle-stroke-width": 1,
           "circle-stroke-color": "#ffffff",
         },
@@ -240,9 +224,13 @@ export function OSMVectorNetworkMap({
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
-    // Fast Node Lookup Map: node_id -> { lat, lng }
+    // Fast Node Lookup Map: normalized node_id -> { lat, lng }
     const nodeMap = new Map<string, { lat: number; lng: number }>();
-    nodes.forEach((n) => nodeMap.set(n.id, { lat: n.lat, lng: n.lng }));
+    nodes.forEach((n) => {
+      if (n && n.id) {
+        nodeMap.set(String(n.id).toLowerCase(), { lat: Number(n.lat), lng: Number(n.lng) });
+      }
+    });
 
     // Build Edges GeoJSON
     const edgeFeatures: Feature[] = [];
@@ -254,12 +242,14 @@ export function OSMVectorNetworkMap({
     edges.forEach((edge) => {
       let coords: [number, number][] = [];
 
-      if (edge.geometry && edge.geometry.coordinates) {
+      if (edge.geometry && edge.geometry.coordinates && Array.isArray(edge.geometry.coordinates) && edge.geometry.coordinates.length > 0) {
         coords = edge.geometry.coordinates;
       } else {
-        const u = nodeMap.get(edge.from_node_id);
-        const v = nodeMap.get(edge.to_node_id);
-        if (u && v) {
+        const uId = String(edge.from_node_id || "").toLowerCase();
+        const vId = String(edge.to_node_id || "").toLowerCase();
+        const u = nodeMap.get(uId);
+        const v = nodeMap.get(vId);
+        if (u && v && !isNaN(u.lat) && !isNaN(v.lat)) {
           coords = [
             [u.lng, u.lat],
             [v.lng, v.lat],
