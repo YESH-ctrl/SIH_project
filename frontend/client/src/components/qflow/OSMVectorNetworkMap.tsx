@@ -1138,7 +1138,7 @@ export function OSMVectorNetworkMap({
         if (coords.length === 0) return;
 
         let posIndex = Math.floor(coords.length * 0.35);
-        if (currentStep === 7 || currentStep === 8) {
+        if (currentStep >= 5) {
           if (incident && vr.vehicle_id === incident.affected_vehicle_id) {
             posIndex = Math.max(0, Math.floor(coords.length * 0.45));
           }
@@ -1151,7 +1151,7 @@ export function OSMVectorNetworkMap({
         let borderColor = vr.color || "#00f0ff";
         let pulseStyle = "";
 
-        if (currentStep === 7 && incident && vr.vehicle_id === incident.affected_vehicle_id) {
+        if (incident && vr.vehicle_id === incident.affected_vehicle_id && currentStep >= 5 && currentStep < 8) {
           statusText = "⚠️ AFFECTED";
           statusBg = "#dc2626";
           statusColor = "#ffffff";
@@ -1190,7 +1190,7 @@ export function OSMVectorNetworkMap({
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
-    if (incident && currentStep && currentStep >= 7) {
+    if (incident && currentStep && currentStep >= 5) {
       const iLat = incident.latitude || 21.2514;
       const iLng = incident.longitude || 81.6296;
 

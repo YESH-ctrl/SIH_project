@@ -449,21 +449,67 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
                 </div>
 
                 <Button
-                  onClick={runQpsoOptimization}
-                  disabled={isOptimizing}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
+                  onClick={nextStep}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
                 >
-                  <Cpu size={15} />
-                  <span>RUN QPSO OPTIMIZATION (STEP 5)</span>
+                  <AlertTriangle size={15} />
+                  <span>SIMULATE TRAFFIC INCIDENT (STEP 5)</span>
                 </Button>
               </div>
             )}
 
-            {/* STEP 5: QPSO ENGINE */}
+            {/* STEP 5: INCIDENT SIMULATION */}
             {currentStep === 5 && (
               <div className="space-y-4 font-mono">
                 <div className="border-b border-slate-800 pb-2">
-                  <span className="text-xs text-amber-400 font-bold uppercase">STEP 05 OF 08</span>
+                  <span className="text-xs text-red-400 font-bold uppercase">STEP 05 OF 08</span>
+                  <h2 className="text-base font-bold text-white uppercase">TRAFFIC DISRUPTION</h2>
+                </div>
+                <p className="text-xs font-sans text-slate-300 leading-relaxed">
+                  "Transportation conditions changed. A simulated vehicle accident blocks Devendra Nagar Flyover, affecting active vehicle route veh_01."
+                </p>
+
+                {incident ? (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-red-950/50 border border-red-500/60 text-red-300 space-y-2 text-xs">
+                      <div className="font-bold flex items-center space-x-1.5 text-red-400">
+                        <AlertTriangle size={16} />
+                        <span>🚨 INCIDENT INCIDENT_001 ACTIVE</span>
+                      </div>
+                      <div className="space-y-1 text-[11px] font-mono text-slate-200">
+                        <div>Location: <span className="text-white font-bold">Devendra Nagar Flyover</span></div>
+                        <div>Type: <span className="text-amber-400 font-bold">VEHICLE_ACCIDENT (HIGH)</span></div>
+                        <div>Affected Vehicle: <span className="text-amber-400 font-bold">veh_01 (Swarm Alpha)</span></div>
+                        <div>Delay Impact: <span className="text-red-400 font-bold">+78.0% Delay Increase</span></div>
+                        <div>Status: <span className="text-red-400 font-bold">AFFECTING ROUTE</span></div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={nextStep}
+                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
+                    >
+                      <Cpu size={15} />
+                      <span>PROCEED TO QPSO OPTIMIZATION (STEP 6)</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={triggerIncident}
+                    disabled={isSimulatingIncident}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
+                  >
+                    <AlertTriangle size={15} />
+                    <span>{isSimulatingIncident ? "INJECTING INCIDENT..." : "INJECT ACCIDENT DISRUPTION"}</span>
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* STEP 6: QPSO ENGINE */}
+            {currentStep === 6 && (
+              <div className="space-y-4 font-mono">
+                <div className="border-b border-slate-800 pb-2">
+                  <span className="text-xs text-amber-400 font-bold uppercase">STEP 06 OF 08</span>
                   <h2 className="text-base font-bold text-white uppercase">QPSO OPTIMIZATION ENGINE</h2>
                 </div>
                 <p className="text-xs font-sans text-slate-300 leading-relaxed">
@@ -490,17 +536,26 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
                     <div className="text-[10px] text-slate-400">Evaluating swarm particles across network graph...</div>
                   </div>
                 ) : qpsoResult ? (
-                  <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 space-y-2 text-xs">
-                    <div className="font-bold flex items-center justify-between">
-                      <span>✓ QPSO OPTIMIZATION COMPLETE</span>
-                      <span className="text-sky-400 font-mono">{qpsoResult.runtime_ms} ms</span>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 space-y-2 text-xs">
+                      <div className="font-bold flex items-center justify-between">
+                        <span>✓ QPSO OPTIMIZATION COMPLETE</span>
+                        <span className="text-sky-400 font-mono">{qpsoResult.runtime_ms} ms</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div>Distance: <span className="text-white font-bold">{qpsoResult.qpso_metrics?.total_distance_km || 31.8} km</span></div>
+                        <div>Travel Time: <span className="text-white font-bold">{qpsoResult.qpso_metrics?.total_travel_time_min || 68} min</span></div>
+                        <div>Time Saved: <span className="text-emerald-400 font-bold">-{qpsoResult.time_improvement_pct || 21.8}%</span></div>
+                        <div>Dist Saved: <span className="text-emerald-400 font-bold">-{qpsoResult.distance_improvement_pct || 19.3}%</span></div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <div>Distance: <span className="text-white font-bold">{qpsoResult.qpso_metrics?.total_distance_km || 31.8} km</span></div>
-                      <div>Travel Time: <span className="text-white font-bold">{qpsoResult.qpso_metrics?.total_travel_time_min || 68} min</span></div>
-                      <div>Time Saved: <span className="text-emerald-400 font-bold">-{qpsoResult.time_improvement_pct || 21.8}%</span></div>
-                      <div>Dist Saved: <span className="text-emerald-400 font-bold">-{qpsoResult.distance_improvement_pct || 19.3}%</span></div>
-                    </div>
+                    <Button
+                      onClick={nextStep}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
+                    >
+                      <span>VIEW OPTIMIZED FLEET METRICS (STEP 7)</span>
+                      <ArrowRight size={14} />
+                    </Button>
                   </div>
                 ) : (
                   <Button
@@ -514,11 +569,11 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
               </div>
             )}
 
-            {/* STEP 6: OPTIMIZED FLEET */}
-            {currentStep === 6 && (
+            {/* STEP 7: OPTIMIZED FLEET */}
+            {currentStep === 7 && (
               <div className="space-y-4 font-mono">
                 <div className="border-b border-slate-800 pb-2">
-                  <span className="text-xs text-amber-400 font-bold uppercase">STEP 06 OF 08</span>
+                  <span className="text-xs text-amber-400 font-bold uppercase">STEP 07 OF 08</span>
                   <h2 className="text-base font-bold text-white uppercase">OPTIMIZED FLEET COMPARISON</h2>
                 </div>
 
@@ -585,49 +640,11 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
 
                 <Button
                   onClick={nextStep}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
                 >
-                  <AlertTriangle size={15} />
-                  <span>SIMULATE TRAFFIC INCIDENT (STEP 7)</span>
+                  <RefreshCw size={15} />
+                  <span>EXECUTE DYNAMIC RE-ROUTING (STEP 8)</span>
                 </Button>
-              </div>
-            )}
-
-            {/* STEP 7: INCIDENT SIMULATION */}
-            {currentStep === 7 && (
-              <div className="space-y-4 font-mono">
-                <div className="border-b border-slate-800 pb-2">
-                  <span className="text-xs text-red-400 font-bold uppercase">STEP 07 OF 08</span>
-                  <h2 className="text-base font-bold text-white uppercase">TRAFFIC DISRUPTION</h2>
-                </div>
-                <p className="text-xs font-sans text-slate-300 leading-relaxed">
-                  "Transportation conditions changed after optimization. A simulated vehicle accident blocks Devendra Nagar Flyover, affecting active vehicle route veh_01."
-                </p>
-
-                {incident ? (
-                  <div className="p-3 bg-red-950/50 border border-red-500/60 text-red-300 space-y-2 text-xs">
-                    <div className="font-bold flex items-center space-x-1.5 text-red-400">
-                      <AlertTriangle size={16} />
-                      <span>🚨 INCIDENT INCIDENT_001 ACTIVE</span>
-                    </div>
-                    <div className="space-y-1 text-[11px] font-mono text-slate-200">
-                      <div>Location: <span className="text-white font-bold">Devendra Nagar Flyover</span></div>
-                      <div>Type: <span className="text-amber-400 font-bold">VEHICLE_ACCIDENT (HIGH)</span></div>
-                      <div>Affected Vehicle: <span className="text-amber-400 font-bold">veh_01 (Swarm Alpha)</span></div>
-                      <div>Delay Impact: <span className="text-red-400 font-bold">+78.0% Delay Increase</span></div>
-                      <div>Status: <span className="text-red-400 font-bold">AFFECTING ROUTE</span></div>
-                    </div>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={triggerIncident}
-                    disabled={isSimulatingIncident}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
-                  >
-                    <AlertTriangle size={15} />
-                    <span>{isSimulatingIncident ? "INJECTING INCIDENT..." : "INJECT ACCIDENT DISRUPTION"}</span>
-                  </Button>
-                )}
               </div>
             )}
 
@@ -737,7 +754,7 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
             vrpRoutes={currentStep >= 4 ? (activeVrpRoutes.length > 0 ? activeVrpRoutes : baselineRoutes) : undefined}
             depot={currentStep >= 3 ? scenario?.depot || { id: "QFLOW_DEPOT", name: "Raipur Main Distribution Depot", latitude: 21.2517, longitude: 81.6294 } : undefined}
             deliveryPoints={currentStep >= 3 ? scenario?.delivery_points || [] : undefined}
-            incident={currentStep >= 7 ? incident : null}
+            incident={currentStep >= 5 ? incident : null}
             rerouteResult={currentStep === 8 ? rerouteResult : null}
             currentStep={currentStep}
             activeTurnIndex={activeTurnIndex}

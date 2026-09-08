@@ -29,9 +29,9 @@ export const DEMO_STEPS: StepInfo[] = [
   { id: 2, key: "STEP_2_ROUTING", title: "ROUTING", subtitle: "Demonstrate valid point-to-point Dijkstra routing along graph geometry.", shortLabel: "2 ROUTING" },
   { id: 3, key: "STEP_3_FLEET_DEMAND", title: "FLEET & DEMAND", subtitle: "Initialize central depot, multi-vehicle fleet, and delivery stops.", shortLabel: "3 FLEET" },
   { id: 4, key: "STEP_4_BASELINE", title: "BASELINE PLAN", subtitle: "Establish measurable baseline fleet routes prior to optimization.", shortLabel: "4 BASELINE" },
-  { id: 5, key: "STEP_5_QPSO", title: "QPSO OPTIMIZATION", subtitle: "Execute quantum-inspired particle swarm algorithm on classical compute.", shortLabel: "5 QPSO" },
-  { id: 6, key: "STEP_6_OPTIMIZED_FLEET", title: "OPTIMIZED FLEET", subtitle: "Compare QPSO optimized fleet routes against baseline metrics.", shortLabel: "6 OPTIMIZED" },
-  { id: 7, key: "STEP_7_INCIDENT", title: "TRAFFIC INCIDENT", subtitle: "Simulate a live road blockage impacting active vehicle routes.", shortLabel: "7 INCIDENT" },
+  { id: 5, key: "STEP_5_INCIDENT", title: "TRAFFIC INCIDENT", subtitle: "Simulate a live road blockage impacting active vehicle routes.", shortLabel: "5 INCIDENT" },
+  { id: 6, key: "STEP_6_QPSO", title: "QPSO OPTIMIZATION", subtitle: "Execute quantum-inspired particle swarm algorithm on classical compute.", shortLabel: "6 QPSO" },
+  { id: 7, key: "STEP_7_OPTIMIZED_FLEET", title: "OPTIMIZED FLEET", subtitle: "Compare QPSO optimized fleet routes against baseline metrics.", shortLabel: "7 OPTIMIZED" },
   { id: 8, key: "STEP_8_REROUTING", title: "DYNAMIC RE-ROUTING", subtitle: "Q-FLOW generates dynamic detours and dispatches updated routes.", shortLabel: "8 RE-ROUTING" },
 ];
 
@@ -297,7 +297,7 @@ export function JuryDemoProvider({ children }: { children: ReactNode }) {
         setActiveVrpRoutes(res.qpso_routes);
         setQpsoCoverage(validateDeliveryCoverage(res.qpso_routes, dps, vehs));
       }
-      setCompletedSteps((prev) => new Set<DemoStepId>([...Array.from(prev), 4, 5, 6]));
+      setCompletedSteps((prev) => new Set<DemoStepId>([...Array.from(prev), 6, 7]));
       setIsOptimizing(false);
     } catch (err: any) {
       setOptError("Optimization run failed: " + (err.message || "Unknown error"));
@@ -305,13 +305,13 @@ export function JuryDemoProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Trigger Incident Simulation (Step 7)
+  // Trigger Incident Simulation (Step 5)
   const triggerIncident = async () => {
     setIsSimulatingIncident(true);
     try {
       const res = await optimizationApi.simulateIncident(networkId, "veh_01");
       setIncident(res);
-      setCompletedSteps((prev) => new Set<DemoStepId>([...Array.from(prev), 7]));
+      setCompletedSteps((prev) => new Set<DemoStepId>([...Array.from(prev), 5]));
       setIsSimulatingIncident(false);
     } catch (err: any) {
       console.warn("Incident simulation error:", err);
@@ -358,11 +358,11 @@ export function JuryDemoProvider({ children }: { children: ReactNode }) {
       case 4:
         return baselineRoutes.length > 0;
       case 5:
-        return qpsoResult !== null;
+        return incident !== null;
       case 6:
         return qpsoResult !== null;
       case 7:
-        return incident !== null;
+        return qpsoResult !== null;
       case 8:
         return rerouteResult !== null;
       default:
