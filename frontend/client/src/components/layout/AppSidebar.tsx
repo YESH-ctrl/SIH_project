@@ -64,7 +64,6 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
       title: "OPTIMIZATION",
       items: [
         { id: "route-optimization", label: "Route Optimization", icon: Cpu, permission: "optimization:view" },
-        { id: "reoptimization", label: "Reoptimization", icon: RefreshCw, permission: "reoptimization:view" },
         { id: "optimization-history", label: "Optimization History", icon: History, permission: "optimization:view" },
       ],
     },
