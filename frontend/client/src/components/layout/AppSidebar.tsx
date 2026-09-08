@@ -57,7 +57,6 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
       title: "OPERATIONS",
       items: [
         { id: "live-fleet", label: "Live Fleet", icon: Truck, permission: "fleet:view" },
-        { id: "route-monitor", label: "Route Monitor", icon: Navigation, permission: "routes:view" },
         { id: "traffic-events", label: "Traffic Events", icon: AlertTriangle, permission: "incidents:view" },
       ],
     },
@@ -139,7 +138,7 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
             <span className="flex items-center">
               <Sparkles size={13} className="mr-1.5" /> JURY DEMO MODE
             </span>
-            <span className="text-[9px] uppercase px-1 bg-amber-400/20 text-amber-300">7 STEPS</span>
+            <span className="text-[9px] uppercase px-1 bg-amber-400/20 text-amber-300">8 STEPS</span>
           </button>
         </div>
 
