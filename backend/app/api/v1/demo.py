@@ -71,7 +71,7 @@ async def get_demo_scenario():
             incidents = await fetch_table_data(client, "incidents")
             optimization_runs = await fetch_table_data(client, "optimization_runs")
             optimization_results = await fetch_table_data(client, "optimization_results")
-            profiles = await fetch_table_data(client, "profiles")
+            profiles = await fetch_table_data(client, "profiles", filter_org=False)
 
             return {
                 "scenario_id": "QFLOW_JURY_DEMO_01",
@@ -92,3 +92,13 @@ async def get_demo_scenario():
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch scenario: {str(e)}")
+
+
+@router.get("/profiles", response_model=list)
+async def get_demo_profiles():
+    """GET /api/v1/demo/profiles - Direct Supabase profiles query."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            return await fetch_table_data(client, "profiles", filter_org=False)
+    except Exception:
+        return []

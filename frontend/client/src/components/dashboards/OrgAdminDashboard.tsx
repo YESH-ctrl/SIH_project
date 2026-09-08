@@ -78,15 +78,12 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
             optimizationStatus: "OPTIMIZED",
           },
           usersOverview: raw.users_overview ?? raw.usersOverview ?? {
-            total: 23,
-            opsManagers: 4,
-            dispatchers: 12,
-            analysts: 5,
-            recentUsers: [
-              { name: "Sienna Miller", email: "dispatcher@qswarm.io", role: "DISPATCHER", date: "Today, 08:15" },
-              { name: "Commander Sarah Jenkins", email: "ops@qswarm.io", role: "OPERATIONS_MANAGER", date: "Yesterday, 16:40" },
-              { name: "Marcus Sterling", email: "analyst@qswarm.io", role: "ANALYST", date: "2 days ago" },
-            ],
+            total: raw.users_overview?.total ?? 5,
+            opsManagers: raw.users_overview?.opsManagers ?? 1,
+            dispatchers: raw.users_overview?.dispatchers ?? 2,
+            analysts: raw.users_overview?.analysts ?? 1,
+            orgAdmins: raw.users_overview?.orgAdmins ?? 1,
+            recentUsers: raw.users_overview?.recentUsers ?? raw.users_overview?.recent_users ?? [],
           },
           recentActivity: (raw.recent_activity ?? raw.recentActivity ?? []).map((act: any) => ({
             id: act.id,
@@ -98,7 +95,12 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
         };
 
         if (!mapped.roleDistribution || mapped.roleDistribution.length === 0) {
-          mapped.roleDistribution = getAdminDashboardData().roleDistribution;
+          mapped.roleDistribution = [
+            { role: "Operations Managers", count: raw.users_overview?.opsManagers ?? 1, color: "#38bdf8" },
+            { role: "Dispatchers", count: raw.users_overview?.dispatchers ?? 2, color: "#a855f7" },
+            { role: "Analysts", count: raw.users_overview?.analysts ?? 1, color: "#f59e0b" },
+            { role: "Org Admins", count: raw.users_overview?.orgAdmins ?? 1, color: "#10b981" },
+          ];
         }
 
         setData(mapped);
@@ -143,9 +145,11 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
   const totalPayloadTons = sumCapacityKg > 0 ? Math.round((sumCapacityKg / 1000) * 10) / 10 : 48.5;
 
   // Dynamic Profiles / Users from Supabase profiles table
-  const profilesList: any[] = (scenario?.profiles && scenario.profiles.length > 0)
+  const rawProfiles = (scenario?.profiles && scenario.profiles.length > 0)
     ? scenario.profiles
     : (data.usersOverview?.recentUsers || []);
+
+  const profilesList: any[] = rawProfiles;
 
   const totalUsersCount = (scenario?.profiles && scenario.profiles.length > 0)
     ? scenario.profiles.length
@@ -153,26 +157,35 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
 
   const opsManagersCount = (scenario?.profiles && scenario.profiles.length > 0)
     ? scenario.profiles.filter((p: any) => (p.role || "").toUpperCase().includes("OPERATIONS")).length
-    : (data.usersOverview?.opsManagers || 4);
+    : (data.usersOverview?.opsManagers ?? 1);
 
   const dispatchersCount = (scenario?.profiles && scenario.profiles.length > 0)
     ? scenario.profiles.filter((p: any) => (p.role || "").toUpperCase().includes("DISPATCHER")).length
-    : (data.usersOverview?.dispatchers || 12);
+    : (data.usersOverview?.dispatchers ?? 2);
 
   const analystsCount = (scenario?.profiles && scenario.profiles.length > 0)
     ? scenario.profiles.filter((p: any) => (p.role || "").toUpperCase().includes("ANALYST")).length
-    : (data.usersOverview?.analysts || 5);
+    : (data.usersOverview?.analysts ?? 1);
 
   const orgAdminsCount = (scenario?.profiles && scenario.profiles.length > 0)
     ? scenario.profiles.filter((p: any) => (p.role || "").toUpperCase().includes("ADMIN")).length
-    : (data.usersOverview?.orgAdmins || 2);
+    : (data.usersOverview?.orgAdmins ?? 1);
 
-  const dynamicRoleDistribution = [
-    { role: "Operations Managers", count: opsManagersCount, color: "#38bdf8" },
-    { role: "Dispatchers", count: dispatchersCount, color: "#a855f7" },
-    { role: "Analysts", count: analystsCount, color: "#f59e0b" },
-    { role: "Org Admins", count: orgAdminsCount, color: "#10b981" },
-  ];
+  const dynamicRoleDistribution = (scenario?.profiles && scenario.profiles.length > 0)
+    ? [
+        { role: "Operations Managers", count: opsManagersCount, color: "#38bdf8" },
+        { role: "Dispatchers", count: dispatchersCount, color: "#a855f7" },
+        { role: "Analysts", count: analystsCount, color: "#f59e0b" },
+        { role: "Org Admins", count: orgAdminsCount, color: "#10b981" },
+      ]
+    : (data.roleDistribution && data.roleDistribution.length > 0
+        ? data.roleDistribution
+        : [
+            { role: "Operations Managers", count: opsManagersCount, color: "#38bdf8" },
+            { role: "Dispatchers", count: dispatchersCount, color: "#a855f7" },
+            { role: "Analysts", count: analystsCount, color: "#f59e0b" },
+            { role: "Org Admins", count: orgAdminsCount, color: "#10b981" },
+          ]);
 
   return (
     <div className="space-y-6 font-sans select-none">

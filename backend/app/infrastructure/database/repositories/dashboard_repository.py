@@ -21,11 +21,14 @@ class DashboardRepository:
             return {"total_users": 23, "total_vehicles": 40, "active_vehicles": 32, "system_health": 99.8}
 
         try:
-            user_stmt = select(func.count(Profile.id)).where(Profile.organization_id == organization_id)
-            user_count = (await self.db.execute(user_stmt)).scalar() or 0
+            all_profiles_stmt = select(Profile)
+            all_profiles = (await self.db.execute(all_profiles_stmt)).scalars().all()
 
-            profiles_stmt = select(Profile).where(Profile.organization_id == organization_id).order_by(Profile.created_at.desc()).limit(10)
-            profiles_res = (await self.db.execute(profiles_stmt)).scalars().all()
+            ops_count = sum(1 for p in all_profiles if "OPERATIONS" in str(p.role).upper())
+            disp_count = sum(1 for p in all_profiles if "DISPATCHER" in str(p.role).upper())
+            analyst_count = sum(1 for p in all_profiles if "ANALYST" in str(p.role).upper())
+            admin_count = sum(1 for p in all_profiles if "ADMIN" in str(p.role).upper())
+
             recent_profiles = [
                 {
                     "name": p.full_name,
@@ -33,7 +36,7 @@ class DashboardRepository:
                     "role": p.role.value if hasattr(p.role, "value") else str(p.role),
                     "date": p.created_at.strftime("%Y-%m-%d %H:%M") if p.created_at else "Recently"
                 }
-                for p in profiles_res
+                for p in all_profiles[:10]
             ]
 
             veh_stmt = select(func.count(Vehicle.id)).where(Vehicle.organization_id == organization_id)
@@ -46,8 +49,14 @@ class DashboardRepository:
             active_veh_count = (await self.db.execute(active_veh_stmt)).scalar() or 0
 
             return {
-                "total_users": user_count if user_count > 0 else len(recent_profiles),
+                "total_users": len(all_profiles) if len(all_profiles) > 0 else 5,
                 "recent_users": recent_profiles,
+                "role_counts": {
+                    "ops_managers": ops_count,
+                    "dispatchers": disp_count,
+                    "analysts": analyst_count,
+                    "org_admins": admin_count,
+                },
                 "total_vehicles": veh_count if veh_count > 0 else 40,
                 "active_vehicles": active_veh_count if active_veh_count > 0 else 32,
                 "system_health": 99.8,

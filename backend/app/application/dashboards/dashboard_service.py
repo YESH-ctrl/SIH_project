@@ -29,7 +29,13 @@ class DashboardService:
 
     async def get_admin_dashboard(self, user: CurrentUser) -> AdminDashboardResponse:
         metrics = await self.repo.get_admin_metrics(user.organization_id)
-        
+        rc = metrics.get("role_counts", {})
+        ops_cnt = rc.get("ops_managers", 1)
+        disp_cnt = rc.get("dispatchers", 2)
+        anl_cnt = rc.get("analysts", 1)
+        adm_cnt = rc.get("org_admins", 1)
+        total_usr = metrics.get("total_users", ops_cnt + disp_cnt + anl_cnt + adm_cnt)
+
         return AdminDashboardResponse(
             organization_name="SIH 2026 Fleet Operations",
             total_vehicles=metrics.get("total_vehicles", 40),
@@ -41,10 +47,10 @@ class DashboardService:
             completed_deliveries_today=248,
             system_health_percent=metrics.get("system_health", 99.8),
             role_distribution=[
-                RoleDistributionItem(role="Operations Managers", count=4, color="#38bdf8"),
-                RoleDistributionItem(role="Dispatchers", count=12, color="#a855f7"),
-                RoleDistributionItem(role="Analysts", count=5, color="#f59e0b"),
-                RoleDistributionItem(role="Org Admins", count=2, color="#10b981"),
+                RoleDistributionItem(role="Operations Managers", count=ops_cnt, color="#38bdf8"),
+                RoleDistributionItem(role="Dispatchers", count=disp_cnt, color="#a855f7"),
+                RoleDistributionItem(role="Analysts", count=anl_cnt, color="#f59e0b"),
+                RoleDistributionItem(role="Org Admins", count=adm_cnt, color="#10b981"),
             ],
             fleet_health={"active": 32, "idle": 5, "maintenance": 3},
             operations_summary={
@@ -62,15 +68,12 @@ class DashboardService:
                 "optimizationStatus": "OPTIMIZED",
             },
             users_overview={
-                "total": metrics.get("total_users", 23),
-                "opsManagers": 4,
-                "dispatchers": 12,
-                "analysts": 5,
-                "recentUsers": metrics.get("recent_users") if metrics.get("recent_users") else [
-                    {"name": "Sienna Miller", "email": "dispatcher@qswarm.io", "role": "DISPATCHER", "date": "Today, 08:15"},
-                    {"name": "Commander Sarah Jenkins", "email": "ops@qswarm.io", "role": "OPERATIONS_MANAGER", "date": "Yesterday, 16:40"},
-                    {"name": "Marcus Sterling", "email": "analyst@qswarm.io", "role": "ANALYST", "date": "2 days ago"},
-                ],
+                "total": total_usr,
+                "opsManagers": ops_cnt,
+                "dispatchers": disp_cnt,
+                "analysts": anl_cnt,
+                "orgAdmins": adm_cnt,
+                "recentUsers": metrics.get("recent_users", []),
             },
             recent_activity=[
                 {"id": "act_1", "time": "08:40 AM", "type": "OPTIMIZATION", "title": "QPSO Fleet Optimization Completed", "desc": "Saved 18.4% travel time across 40 vehicles"},
