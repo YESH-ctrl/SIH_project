@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { getOperationsDashboardData } from "@/services/dashboardService";
+import React, { useState, useEffect } from "react";
+import { getOperationsDashboardData, OperationsDashboardData } from "@/services/dashboardService";
+import { dashboardApi, demoApi, DemoScenarioResponse } from "@/services/apiClient";
 import { LiveOperationsMap } from "@/components/qflow/LiveOperationsMap";
 import {
   Activity,
@@ -15,6 +16,7 @@ import {
   ArrowRight,
   ShieldAlert,
   Layers,
+  Database,
 } from "lucide-react";
 
 interface OperationsManagerDashboardProps {
@@ -26,8 +28,91 @@ export function OperationsManagerDashboard({
   onNavigate,
   onTriggerIncidentDemo,
 }: OperationsManagerDashboardProps) {
-  const data = getOperationsDashboardData();
+  const [data, setData] = useState<OperationsDashboardData>(getOperationsDashboardData());
+  const [scenario, setScenario] = useState<DemoScenarioResponse | null>(null);
+  const [isLive, setIsLive] = useState<boolean>(false);
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchBackendData() {
+      try {
+        const [opsRes, scenarioRes] = await Promise.allSettled([
+          dashboardApi.getOperationsDashboard(),
+          demoApi.getScenario(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (opsRes.status === "fulfilled" && opsRes.value) {
+          const raw = opsRes.value;
+          const mappedData: OperationsDashboardData = {
+            activeVehicles: raw.active_vehicles ?? raw.activeVehicles ?? 40,
+            activeRoutes: raw.active_routes ?? raw.activeRoutes ?? 40,
+            deliveryStops: raw.delivery_stops ?? raw.deliveryStops ?? 300,
+            networkCongestion: raw.network_congestion ?? raw.networkCongestion ?? 38,
+            avgSpeedKmh: raw.avg_speed_kmh ?? raw.avgSpeedKmh ?? 32,
+            onTimeDeliveryPercent: raw.on_time_delivery_percent ?? raw.onTimeDeliveryPercent ?? 94.2,
+            delayedRoutesCount: raw.delayed_routes_count ?? raw.delayed_routes ?? raw.delayedRoutesCount ?? 4,
+            optimizationStatus: raw.optimization_status ?? raw.optimizationStatus ?? "OPTIMIZATION READY",
+            operationalHealth: raw.operational_health ?? raw.operationalHealth ?? { onSchedule: 34, delayed: 4, idle: 2, atRisk: 3, exceptions: 1 },
+            latestIncident: raw.latest_incident ? {
+              code: raw.latest_incident.code ?? "E17",
+              location: raw.latest_incident.location ?? "Rajpur Express E17",
+              delayIncreasePercent: raw.latest_incident.delay_increase_percent ?? raw.latest_incident.delayIncreasePercent ?? 78,
+              affectedVehicles: raw.latest_incident.affected_vehicles ?? raw.latest_incident.affectedVehicles ?? 6,
+              affectedRoutes: raw.latest_incident.affected_routes ?? raw.latest_incident.affectedRoutes ?? 4,
+              severity: raw.latest_incident.severity ?? "High",
+            } : getOperationsDashboardData().latestIncident,
+            currentOptimization: raw.current_optimization ? {
+              runId: raw.current_optimization.run_id ?? raw.current_optimization.runId ?? "QPSO-RUN-8942",
+              algorithm: raw.current_optimization.algorithm ?? "QPSO (Quantum Swarm)",
+              vehicleCount: raw.current_optimization.vehicle_count ?? raw.current_optimization.vehicleCount ?? 40,
+              stopCount: raw.current_optimization.stop_count ?? raw.current_optimization.stopCount ?? 300,
+              progressPercent: raw.current_optimization.progress_percent ?? raw.current_optimization.progressPercent ?? 100,
+              bestFitness: raw.current_optimization.best_fitness ?? raw.current_optimization.bestFitness ?? 1240.8,
+              status: raw.current_optimization.status ?? "COMPLETED",
+              lastRunTime: raw.current_optimization.last_run_time ?? raw.current_optimization.lastRunTime ?? "08:40 AM",
+            } : getOperationsDashboardData().currentOptimization,
+            priorityActions: (raw.priority_actions ?? raw.priorityActions ?? []).map((pa: any) => ({
+              id: pa.id,
+              title: pa.title,
+              urgency: pa.urgency,
+              count: pa.count,
+              actionLabel: pa.action_label ?? pa.actionLabel,
+              targetTab: pa.target_tab ?? pa.targetTab,
+            })),
+          };
+
+          if (!mappedData.priorityActions || mappedData.priorityActions.length === 0) {
+            mappedData.priorityActions = getOperationsDashboardData().priorityActions;
+          }
+
+          setData(mappedData);
+          setIsLive(true);
+        }
+
+        if (scenarioRes.status === "fulfilled" && scenarioRes.value) {
+          setScenario(scenarioRes.value);
+        }
+      } catch (error) {
+        console.warn("[Q-FLOW Dashboard] Error connecting to Supabase backend API:", error);
+      }
+    }
+
+    fetchBackendData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const totalVehiclesCount = scenario?.vehicles?.length ?? data.activeVehicles;
+  const deliveryStopsCount = scenario?.delivery_points?.length ?? data.deliveryStops;
+  const activeRoutesCount = scenario?.routes?.length ?? data.activeRoutes;
+  const affectedVehiclesCount = scenario?.vehicles?.filter((v: any) => v.status === "Affected")?.length ?? 6;
+  const onScheduleVehiclesCount = totalVehiclesCount - affectedVehiclesCount;
 
   return (
     <div className="space-y-6 font-sans">
@@ -37,6 +122,13 @@ export function OperationsManagerDashboard({
           <div className="flex items-center space-x-2 mb-1 font-mono text-xs text-sky-400 uppercase tracking-wider">
             <Activity size={14} />
             <span>OPERATIONS COMMAND CENTER</span>
+            {isLive && (
+              <span className="ml-2 px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1.5">
+                <Database size={11} className="text-emerald-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                SUPABASE LIVE API
+              </span>
+            )}
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight font-mono">
             Fleet Operations Overview
@@ -68,20 +160,20 @@ export function OperationsManagerDashboard({
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 font-mono">
         <div className="bg-[#0b0c0e] border border-slate-800 p-3 flex flex-col justify-between">
           <span className="text-[10px] text-slate-400 uppercase">ACTIVE VEHICLES</span>
-          <div className="text-xl font-bold text-emerald-400 mt-1">{data.activeVehicles}</div>
+          <div className="text-xl font-bold text-emerald-400 mt-1">{totalVehiclesCount}</div>
           <span className="text-[9px] text-slate-500 mt-1">100% Operational</span>
         </div>
 
         <div className="bg-[#0b0c0e] border border-slate-800 p-3 flex flex-col justify-between">
           <span className="text-[10px] text-slate-400 uppercase">ACTIVE ROUTES</span>
-          <div className="text-xl font-bold text-white mt-1">{data.activeRoutes}</div>
-          <span className="text-[9px] text-slate-500 mt-1">Rajpur Urban Zone</span>
+          <div className="text-xl font-bold text-white mt-1">{activeRoutesCount}</div>
+          <span className="text-[9px] text-slate-500 mt-1">{scenario?.network?.name || "Rajpur Urban Zone"}</span>
         </div>
 
         <div className="bg-[#0b0c0e] border border-slate-800 p-3 flex flex-col justify-between">
           <span className="text-[10px] text-slate-400 uppercase">DELIVERY STOPS</span>
-          <div className="text-xl font-bold text-sky-400 mt-1">{data.deliveryStops}</div>
-          <span className="text-[9px] text-slate-500 mt-1">3 Central Depots</span>
+          <div className="text-xl font-bold text-sky-400 mt-1">{deliveryStopsCount}</div>
+          <span className="text-[9px] text-slate-500 mt-1">Central Depot</span>
         </div>
 
         <div className="bg-[#0b0c0e] border border-slate-800 p-3 flex flex-col justify-between">
@@ -110,7 +202,7 @@ export function OperationsManagerDashboard({
 
         <div className="bg-[#0b0c0e] border border-slate-800 p-3 flex flex-col justify-between">
           <span className="text-[10px] text-slate-400 uppercase">OPTIMIZATION</span>
-          <div className="text-xs font-bold text-emerald-400 mt-1 font-mono tracking-tight">READY</div>
+          <div className="text-xs font-bold text-emerald-400 mt-1 font-mono tracking-tight">{data.optimizationStatus}</div>
           <span className="text-[9px] text-slate-500 mt-1">QPSO Engine</span>
         </div>
       </div>
@@ -125,11 +217,11 @@ export function OperationsManagerDashboard({
               <span className="font-bold text-white uppercase">RAJPUR LIVE NETWORK CANVAS</span>
             </div>
             <div className="flex items-center space-x-3 text-[11px]">
-              <span className="text-slate-400">40 Vehicles</span>
+              <span className="text-slate-400">{totalVehiclesCount} Vehicles</span>
               <span className="text-slate-500">•</span>
-              <span className="text-emerald-400 font-bold">34 On Schedule</span>
+              <span className="text-emerald-400 font-bold">{onScheduleVehiclesCount} On Schedule</span>
               <span className="text-slate-500">•</span>
-              <span className="text-red-400 font-bold">6 Affected</span>
+              <span className="text-red-400 font-bold">{affectedVehiclesCount} Affected</span>
             </div>
           </div>
 
@@ -148,7 +240,7 @@ export function OperationsManagerDashboard({
                 NEEDS ATTENTION • PRIORITY ACTIONS
               </h2>
               <span className="text-[10px] font-mono bg-red-950 text-red-300 px-2 py-0.5 border border-red-800">
-                3 ISSUES
+                {data.priorityActions.length} ISSUES
               </span>
             </div>
 
@@ -231,7 +323,7 @@ export function OperationsManagerDashboard({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">PROBLEM SCOPE:</span>
-                <span className="text-white">{data.currentOptimization.vehicleCount} Vehicles • {data.currentOptimization.stopCount} Stops</span>
+                <span className="text-white">{totalVehiclesCount} Vehicles • {deliveryStopsCount} Stops</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">BEST FITNESS SCORE:</span>
@@ -252,3 +344,4 @@ export function OperationsManagerDashboard({
     </div>
   );
 }
+
