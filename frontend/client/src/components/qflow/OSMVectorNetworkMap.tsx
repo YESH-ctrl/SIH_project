@@ -1157,7 +1157,7 @@ export function OSMVectorNetworkMap({
           statusColor = "#ffffff";
           borderColor = "#ef4444";
           pulseStyle = "animation: pulse 1s infinite;";
-        } else if (currentStep === 8 && rerouteResult && vr.vehicle_id === rerouteResult.affected_vehicle_id) {
+        } else if (currentStep === 8 || (currentStep === 7 && rerouteResult)) {
           statusText = "✅ REROUTED";
           statusBg = "#059669";
           statusColor = "#ffffff";
@@ -1190,7 +1190,7 @@ export function OSMVectorNetworkMap({
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
-    if (incident && currentStep && currentStep >= 5) {
+    if (incident && currentStep && currentStep >= 5 && currentStep < 8) {
       const iLat = incident.latitude || 21.2514;
       const iLng = incident.longitude || 81.6296;
 
