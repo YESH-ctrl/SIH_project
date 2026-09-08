@@ -553,7 +553,7 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
                       onClick={nextStep}
                       className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
                     >
-                      <span>VIEW OPTIMIZED FLEET METRICS (STEP 7)</span>
+                      <span>EXECUTE DYNAMIC RE-ROUTING (STEP 7)</span>
                       <ArrowRight size={14} />
                     </Button>
                   </div>
@@ -569,11 +569,67 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
               </div>
             )}
 
-            {/* STEP 7: OPTIMIZED FLEET */}
+            {/* STEP 7: RE-ROUTING */}
             {currentStep === 7 && (
               <div className="space-y-4 font-mono">
                 <div className="border-b border-slate-800 pb-2">
                   <span className="text-xs text-amber-400 font-bold uppercase">STEP 07 OF 08</span>
+                  <h2 className="text-base font-bold text-white uppercase">DYNAMIC RE-ROUTING</h2>
+                </div>
+                <p className="text-xs font-sans text-slate-300 leading-relaxed">
+                  "Q-FLOW warm-start re-optimization re-calculates local shortest paths avoiding blocked edges in real time."
+                </p>
+
+                {rerouteResult ? (
+                  <div className="space-y-3">
+                    <div className="p-4 bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/50 space-y-3 font-mono text-xs">
+                      <div className="font-bold text-emerald-400 flex items-center space-x-1.5">
+                        <ShieldCheck size={16} />
+                        <span>✓ RE-ROUTING SUCCESSFUL</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div>Vehicle Rerouted: <span className="text-white font-bold">veh_01</span></div>
+                        <div>Response Time: <span className="text-sky-400 font-bold">{rerouteResult.reroute_runtime_ms || 42} ms</span></div>
+                        <div>Original Time: <span className="text-slate-300">{rerouteResult.original_travel_time_min || 28} min</span></div>
+                        <div>New Detour Time: <span className="text-emerald-400 font-bold">{rerouteResult.new_travel_time_min || 31} min</span></div>
+                      </div>
+                      <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 text-[10px] text-emerald-300">
+                        💡 Disruption Bypass: <span className="font-bold text-white">+{rerouteResult.time_delay_saved_min || 14} min delay prevented</span> vs staying in traffic.
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-1 font-sans">
+                      <div className="font-bold text-amber-400 uppercase text-xs">Q-FLOW DYNAMIC RESPONSE COMPLETE</div>
+                      <div>"Q-FLOW does not stop when the route is optimized. It adapts when the transportation network changes."</div>
+                      <div className="text-[10px] font-mono text-sky-400 pt-1">TRAFFIC → OPTIMIZATION → DISPATCH → INCIDENT → RE-OPTIMIZATION → UPDATED ROUTE</div>
+                    </div>
+
+                    <Button
+                      onClick={nextStep}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
+                    >
+                      <span>VIEW OPTIMIZED FLEET METRICS (STEP 8)</span>
+                      <ArrowRight size={14} />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={executeRerouting}
+                    disabled={isRerouting || !incident}
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
+                  >
+                    <RefreshCw size={15} className={isRerouting ? "animate-spin" : ""} />
+                    <span>{isRerouting ? "RE-OPTIMIZING..." : "EXECUTE RE-ROUTING NOW"}</span>
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* STEP 8: OPTIMIZED FLEET */}
+            {currentStep === 8 && (
+              <div className="space-y-4 font-mono">
+                <div className="border-b border-slate-800 pb-2">
+                  <span className="text-xs text-emerald-400 font-bold uppercase">STEP 08 OF 08</span>
                   <h2 className="text-base font-bold text-white uppercase">OPTIMIZED FLEET COMPARISON</h2>
                 </div>
 
@@ -639,60 +695,12 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
                 </div>
 
                 <Button
-                  onClick={nextStep}
+                  onClick={onFinishDemo || restartDemo}
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
                 >
-                  <RefreshCw size={15} />
-                  <span>EXECUTE DYNAMIC RE-ROUTING (STEP 8)</span>
+                  <Trophy size={15} />
+                  <span>{onFinishDemo ? "COMPLETE DEMONSTRATION" : "RESTART DEMO WORKFLOW"}</span>
                 </Button>
-              </div>
-            )}
-
-            {/* STEP 8: RE-ROUTING */}
-            {currentStep === 8 && (
-              <div className="space-y-4 font-mono">
-                <div className="border-b border-slate-800 pb-2">
-                  <span className="text-xs text-emerald-400 font-bold uppercase">STEP 08 OF 08</span>
-                  <h2 className="text-base font-bold text-white uppercase">DYNAMIC RE-ROUTING</h2>
-                </div>
-                <p className="text-xs font-sans text-slate-300 leading-relaxed">
-                  "Q-FLOW warm-start re-optimization re-calculates local shortest paths avoiding blocked edges in real time."
-                </p>
-
-                {rerouteResult ? (
-                  <div className="p-4 bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/50 space-y-3 font-mono text-xs">
-                    <div className="font-bold text-emerald-400 flex items-center space-x-1.5">
-                      <ShieldCheck size={16} />
-                      <span>✓ RE-ROUTING SUCCESSFUL</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <div>Vehicle Rerouted: <span className="text-white font-bold">veh_01</span></div>
-                      <div>Response Time: <span className="text-sky-400 font-bold">{rerouteResult.reroute_runtime_ms || 42} ms</span></div>
-                      <div>Original Time: <span className="text-slate-300">{rerouteResult.original_travel_time_min || 28} min</span></div>
-                      <div>New Detour Time: <span className="text-emerald-400 font-bold">{rerouteResult.new_travel_time_min || 31} min</span></div>
-                    </div>
-                    <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 text-[10px] text-emerald-300">
-                      💡 Disruption Bypass: <span className="font-bold text-white">+{rerouteResult.time_delay_saved_min || 14} min delay prevented</span> vs staying in traffic.
-                    </div>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={executeRerouting}
-                    disabled={isRerouting || !incident}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-bold uppercase text-xs shadow-lg py-3 flex items-center justify-center space-x-2"
-                  >
-                    <RefreshCw size={15} />
-                    <span>{isRerouting ? "RE-OPTIMIZING..." : "EXECUTE RE-ROUTING NOW"}</span>
-                  </Button>
-                )}
-
-                {rerouteResult && (
-                  <div className="p-3 bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-1 font-sans">
-                    <div className="font-bold text-amber-400 uppercase text-xs">Q-FLOW DYNAMIC RESPONSE COMPLETE</div>
-                    <div>"Q-FLOW does not stop when the route is optimized. It adapts when the transportation network changes."</div>
-                    <div className="text-[10px] font-mono text-sky-400 pt-1">TRAFFIC → OPTIMIZATION → DISPATCH → INCIDENT → RE-OPTIMIZATION → UPDATED ROUTE</div>
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -755,7 +763,7 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
             depot={currentStep >= 3 ? scenario?.depot || { id: "QFLOW_DEPOT", name: "Raipur Main Distribution Depot", latitude: 21.2517, longitude: 81.6294 } : undefined}
             deliveryPoints={currentStep >= 3 ? scenario?.delivery_points || [] : undefined}
             incident={currentStep >= 5 ? incident : null}
-            rerouteResult={currentStep === 8 ? rerouteResult : null}
+            rerouteResult={currentStep >= 7 ? rerouteResult : null}
             currentStep={currentStep}
             activeTurnIndex={activeTurnIndex}
             onTurnSelect={setActiveTurnIndex}
