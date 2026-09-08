@@ -598,6 +598,32 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
                       </div>
                     </div>
 
+                    <div className="p-3 bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 space-y-2 text-xs font-mono">
+                      <div className="font-bold flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-emerald-400">
+                          <ShieldCheck size={14} />
+                          <span>INCIDENT CLEARED & FLEET REROUTED</span>
+                        </span>
+                        <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-1.5 py-0.5 border border-emerald-500/30">
+                          RESOLVED
+                        </span>
+                      </div>
+                      <div className="space-y-1 pt-1 border-t border-emerald-900/60 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-cyan-400 font-bold">• veh_01 (Swarm Alpha)</span>
+                          <span className="text-emerald-400 font-bold bg-emerald-500/20 px-1.5 py-0.5 border border-emerald-500/40">✅ REROUTED</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-emerald-400 font-bold">• veh_02 (Swarm Beta)</span>
+                          <span className="text-emerald-400 font-bold bg-emerald-500/20 px-1.5 py-0.5 border border-emerald-500/40">✅ REROUTED</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-amber-400 font-bold">• veh_03 (Swarm Gamma)</span>
+                          <span className="text-emerald-400 font-bold bg-emerald-500/20 px-1.5 py-0.5 border border-emerald-500/40">✅ REROUTED</span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="p-3 bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-1 font-sans">
                       <div className="font-bold text-amber-400 uppercase text-xs">Q-FLOW DYNAMIC RESPONSE COMPLETE</div>
                       <div>"Q-FLOW does not stop when the route is optimized. It adapts when the transportation network changes."</div>
@@ -792,7 +818,7 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
             vrpRoutes={currentStep >= 4 ? (activeVrpRoutes.length > 0 ? activeVrpRoutes : baselineRoutes) : undefined}
             depot={currentStep >= 3 ? scenario?.depot || { id: "QFLOW_DEPOT", name: "Raipur Main Distribution Depot", latitude: 21.2517, longitude: 81.6294 } : undefined}
             deliveryPoints={currentStep >= 3 ? scenario?.delivery_points || [] : undefined}
-            incident={currentStep >= 5 && currentStep < 8 ? incident : null}
+            incident={currentStep >= 5 && currentStep < 7 ? incident : null}
             rerouteResult={currentStep >= 7 ? rerouteResult : null}
             currentStep={currentStep}
             activeTurnIndex={activeTurnIndex}

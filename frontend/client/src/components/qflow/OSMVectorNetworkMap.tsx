@@ -1151,17 +1151,17 @@ export function OSMVectorNetworkMap({
         let borderColor = vr.color || "#00f0ff";
         let pulseStyle = "";
 
-        if (incident && vr.vehicle_id === incident.affected_vehicle_id && currentStep >= 5 && currentStep < 8) {
+        if (currentStep >= 7 || rerouteResult) {
+          statusText = "✅ REROUTED";
+          statusBg = "#059669";
+          statusColor = "#ffffff";
+          borderColor = "#10b981";
+        } else if (incident && vr.vehicle_id === incident.affected_vehicle_id && currentStep >= 5) {
           statusText = "⚠️ AFFECTED";
           statusBg = "#dc2626";
           statusColor = "#ffffff";
           borderColor = "#ef4444";
           pulseStyle = "animation: pulse 1s infinite;";
-        } else if (currentStep === 8 || (currentStep === 7 && rerouteResult)) {
-          statusText = "✅ REROUTED";
-          statusBg = "#059669";
-          statusColor = "#ffffff";
-          borderColor = "#10b981";
         }
 
         const el = document.createElement("div");
@@ -1190,7 +1190,7 @@ export function OSMVectorNetworkMap({
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
-    if (incident && currentStep && currentStep >= 5 && currentStep < 8) {
+    if (incident && currentStep && currentStep >= 5 && currentStep < 7 && !rerouteResult) {
       const iLat = incident.latitude || 21.2514;
       const iLng = incident.longitude || 81.6296;
 
@@ -1220,9 +1220,9 @@ export function OSMVectorNetworkMap({
         incidentMarkerRef.current = null;
       }
     }
-  }, [incident, currentStep, isMapLoaded]);
+  }, [incident, currentStep, rerouteResult, isMapLoaded]);
 
-  // ── 4g. Render Old Route vs New Bypass Route for Step 8 ─────────────────
+  // ── 4g. Render Old Route vs New Bypass Route for Step 7 & 8 ───────────────
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
@@ -1230,7 +1230,7 @@ export function OSMVectorNetworkMap({
     const OLD_SRC_ID = "qflow-old-route-src";
     const OLD_LAYER_ID = "qflow-old-route-layer";
 
-    if (currentStep === 8 && rerouteResult && rerouteResult.original_route?.geometry) {
+    if (currentStep >= 7 && rerouteResult && rerouteResult.original_route?.geometry) {
       const origGeom = rerouteResult.original_route.geometry;
 
       if (!map.getSource(OLD_SRC_ID)) {
