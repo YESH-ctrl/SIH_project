@@ -84,21 +84,6 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
         { id: "reports", label: "Reports & Exports", icon: FileText, permission: "analytics:view" },
       ],
     },
-    {
-      title: "ADMINISTRATION",
-      items: [
-        { id: "users", label: "User Management", icon: Users, permission: "users:view" },
-        { id: "organization", label: "Org Settings", icon: Building, permission: "organization:view" },
-      ],
-    },
-    {
-      title: "SYSTEM",
-      items: [
-        { id: "simulation", label: "Simulation", icon: Play, permission: "simulation:view" },
-        { id: "architecture", label: "Architecture", icon: GitBranch, permission: "dashboard:view" },
-        { id: "settings", label: "Settings", icon: Settings, permission: "dashboard:view" },
-      ],
-    },
   ];
 
   return (
