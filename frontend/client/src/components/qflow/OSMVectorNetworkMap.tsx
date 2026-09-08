@@ -636,7 +636,7 @@ export function OSMVectorNetworkMap({
         source: "nodes-source",
         minzoom: 13,
         paint: {
-          "circle-color": "#c8ff00",
+          "circle-color": "#38bdf8",
           "circle-radius": 3.0,
           "circle-stroke-width": 1.0,
           "circle-stroke-color": "#030712",
@@ -802,7 +802,7 @@ export function OSMVectorNetworkMap({
         const el = document.createElement("div");
         el.className = "qflow-target-marker";
         el.innerHTML = `
-          <div style="background:#ff4d2d; color:#ffffff; font-weight:800; font-family:monospace; font-size:12px; padding:4px 8px; border-radius:6px; border:2px solid #ffffff; box-shadow:0 0 14px #ff4d2d; display:flex; align-items:center; gap:4px; transform:translate(-50%, -100%); cursor:pointer;">
+          <div style="background:#ef4444; color:#ffffff; font-weight:800; font-family:monospace; font-size:12px; padding:4px 8px; border-radius:6px; border:2px solid #ffffff; box-shadow:0 0 14px #ef4444; display:flex; align-items:center; gap:4px; transform:translate(-50%, -100%); cursor:pointer;">
             <span>🔴</span>
             <span>DESTINATION (B)</span>
           </div>
@@ -820,6 +820,12 @@ export function OSMVectorNetworkMap({
 
   // ── 4. Render Q-FLOW Route Geometry ──────────────────────────────────────
   // This effect fires whenever routeResponse or isMapLoaded changes.
+  // IMPORTANT: We do NOT check map.isStyleLoaded() here.
+  // The route source and all layers are added in map.on("load") (which fires once).
+  // isStyleLoaded() returns false while OSM raster tiles are still downloading,
+  // even after the load event has fired. Using map.once("load") as a fallback
+  // silently fails because "load" already fired. The correct check is whether
+  // the route source already exists on the map instance.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
@@ -829,6 +835,21 @@ export function OSMVectorNetworkMap({
       return;
     }
 
+    console.log("[Q-FLOW Map] ✅ routeResponse received — attempting render:", {
+      network_id: routeResponse.network_id,
+      node_count: routeResponse.node_count,
+      edge_count: routeResponse.edge_count,
+      distance_meters: routeResponse.distance_meters,
+      algorithm: routeResponse.algorithm,
+      geometry_type: routeResponse.geometry?.type,
+      geometry_coords_length: routeResponse.geometry?.coordinates?.length,
+      geometry_first: routeResponse.geometry?.coordinates?.[0],
+      geometry_last: routeResponse.geometry?.coordinates?.[routeResponse.geometry?.coordinates?.length - 1],
+      path_coordinates_length: routeResponse.path_coordinates?.length,
+      node_ids_length: routeResponse.node_ids?.length,
+    });
+
+    // Ensure source and layers exist (they should, added in map.on("load"))
     ensureRouteSource(map);
     ensureRouteLayers(map);
 
@@ -838,6 +859,8 @@ export function OSMVectorNetworkMap({
       if (rendered) {
         fitMapToRoute(map, coords);
       } else {
+        // Fallback: retry after a short delay to allow GPU pipeline to settle
+        console.warn("[Q-FLOW Map] renderRouteOnMap returned false — retrying in 150ms");
         setTimeout(() => {
           const m = mapRef.current;
           const rr = routeResponseRef.current;
@@ -853,6 +876,7 @@ export function OSMVectorNetworkMap({
         }, 150);
       }
     } else {
+      console.warn("[Q-FLOW Map] No valid coords extracted from routeResponse — clearing route");
       clearRouteFromMap(map);
     }
   }, [routeResponse, isMapLoaded, renderCurrentRoute]);
@@ -862,6 +886,7 @@ export function OSMVectorNetworkMap({
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
+    // Clear previous turn markers
     turnMarkersRef.current.forEach((m) => m.remove());
     turnMarkersRef.current = [];
 
@@ -876,7 +901,7 @@ export function OSMVectorNetworkMap({
       const isStart = step.maneuver === "START";
       const isArrive = step.maneuver === "ARRIVE";
       const badgeBg = isStart ? "#064e3b" : isArrive ? "#7f1d1d" : "#0f172a";
-      const badgeBorder = isStart ? "#10b981" : isArrive ? "#ff4d2d" : "#c8ff00";
+      const badgeBorder = isStart ? "#10b981" : isArrive ? "#ef4444" : "#38bdf8";
       const isSelected = activeTurnIndex === idx;
 
       el.innerHTML = `
@@ -896,7 +921,7 @@ export function OSMVectorNetworkMap({
             ${step.instruction}
           </div>
           <div style="color:#94a3b8; font-size:10px; font-family:monospace; margin-top:5px; border-top:1px solid #1e293b; padding-top:4px;">
-            Segment: <span style="color:#c8ff00; font-weight:bold;">${step.distanceKm} km</span> • Cumulative: <span style="color:#10b981; font-weight:bold;">${step.cumulativeDistanceKm} km</span>
+            Segment: <span style="color:#38bdf8; font-weight:bold;">${step.distanceKm} km</span> • Cumulative: <span style="color:#10b981; font-weight:bold;">${step.cumulativeDistanceKm} km</span>
           </div>
         </div>
       `;
