@@ -80,8 +80,6 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
     {
       title: "ANALYST & REPORTS",
       items: [
-        { id: "fleet-performance", label: "Fleet Performance", icon: BarChart3, permission: "analytics:view" },
-        { id: "traffic-analytics", label: "Traffic Analytics", icon: Activity, permission: "traffic:view" },
         { id: "benchmark", label: "Algorithm Benchmark", icon: Sliders, permission: "benchmarks:view" },
         { id: "reports", label: "Reports & Exports", icon: FileText, permission: "analytics:view" },
       ],
