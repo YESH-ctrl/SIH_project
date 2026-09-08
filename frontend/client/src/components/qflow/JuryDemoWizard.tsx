@@ -731,10 +731,10 @@ function JuryDemoWizardInner({ onFinishDemo }: JuryDemoProps) {
             selectedNode={null}
             routeResponse={currentStep === 2 ? abRoute : null}
             mapMode={currentStep === 2 ? "ROUTE" : "NETWORK"}
-            sourcePoint={sourcePoint}
-            targetPoint={targetPoint}
+            sourcePoint={currentStep === 2 ? sourcePoint : null}
+            targetPoint={currentStep === 2 ? targetPoint : null}
             layerVisibility={layerVisibility}
-            vrpRoutes={currentStep >= 3 ? activeVrpRoutes.length > 0 ? activeVrpRoutes : baselineRoutes : undefined}
+            vrpRoutes={currentStep >= 4 ? (activeVrpRoutes.length > 0 ? activeVrpRoutes : baselineRoutes) : undefined}
             depot={currentStep >= 3 ? scenario?.depot || { id: "QFLOW_DEPOT", name: "Raipur Main Distribution Depot", latitude: 21.2517, longitude: 81.6294 } : undefined}
             deliveryPoints={currentStep >= 3 ? scenario?.delivery_points || [] : undefined}
             incident={currentStep >= 7 ? incident : null}

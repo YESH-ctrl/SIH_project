@@ -1024,7 +1024,10 @@ export function OSMVectorNetworkMap({
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
-    if (depot && depot.latitude && depot.longitude) {
+    const dLat = depot?.latitude || (depot as any)?.lat;
+    const dLng = depot?.longitude || (depot as any)?.lng;
+
+    if (depot && dLat && dLng) {
       if (!depotMarkerRef.current) {
         const el = document.createElement("div");
         el.className = "qflow-depot-marker";
@@ -1035,10 +1038,10 @@ export function OSMVectorNetworkMap({
           </div>
         `;
         depotMarkerRef.current = new maplibregl.Marker({ element: el })
-          .setLngLat([depot.longitude, depot.latitude])
+          .setLngLat([Number(dLng), Number(dLat)])
           .addTo(map);
       } else {
-        depotMarkerRef.current.setLngLat([depot.longitude, depot.latitude]);
+        depotMarkerRef.current.setLngLat([Number(dLng), Number(dLat)]);
       }
     } else {
       if (depotMarkerRef.current) {
@@ -1057,14 +1060,32 @@ export function OSMVectorNetworkMap({
     deliveryMarkersRef.current = [];
 
     if (deliveryPoints && deliveryPoints.length > 0) {
+      const allLngs: number[] = [];
+      const allLats: number[] = [];
+
+      const dLat = depot?.latitude || (depot as any)?.lat;
+      const dLng = depot?.longitude || (depot as any)?.lng;
+      if (dLat && dLng) {
+        allLats.push(Number(dLat));
+        allLngs.push(Number(dLng));
+      }
+
       deliveryPoints.forEach((dp, idx) => {
-        if (!dp.latitude || !dp.longitude) return;
+        const lat = Number(dp.latitude || (dp as any).lat);
+        const lng = Number(dp.longitude || (dp as any).lng);
+        const demand = dp.demand ?? (dp as any).demand_kg ?? 10;
+        const name = dp.name || (dp as any).point_code || `Stop ${idx + 1}`;
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+
+        allLats.push(lat);
+        allLngs.push(lng);
+
         const el = document.createElement("div");
         el.className = "qflow-delivery-marker";
         el.innerHTML = `
           <div style="background:#0f172a; color:#cbd5e1; font-weight:700; font-family:monospace; font-size:10px; padding:4px 7px; border-radius:6px; border:1.5px solid #38bdf8; box-shadow:0 0 12px rgba(56,189,248,0.5); display:flex; align-items:center; gap:4px; transform:translate(-50%, -100%); cursor:pointer;">
             <span style="font-size:11px;">📦</span>
-            <span>D${String(idx + 1).padStart(2, "0")} (${dp.demand}u)</span>
+            <span>D${String(idx + 1).padStart(2, "0")} (${demand}u)</span>
           </div>
         `;
 
@@ -1074,10 +1095,10 @@ export function OSMVectorNetworkMap({
               <span>📦 STOP D${String(idx + 1).padStart(2, "0")} (${dp.id})</span>
             </div>
             <div style="font-size:11px; color:#f1f5f9; font-weight:bold; margin-top:3px;">
-              ${dp.name}
+              ${name}
             </div>
             <div style="color:#94a3b8; font-size:10px; font-family:monospace; margin-top:5px; border-top:1px solid #1e293b; padding-top:4px; display:flex; justify-between;">
-              <span>Demand: <b style="color:#38bdf8;">${dp.demand} units</b></span>
+              <span>Demand: <b style="color:#38bdf8;">${demand} units</b></span>
               <span>Node: <b style="color:#cbd5e1;">${dp.node_id ? dp.node_id.slice(0, 8) + '...' : 'Snapped'}</b></span>
             </div>
           </div>
@@ -1086,13 +1107,22 @@ export function OSMVectorNetworkMap({
         const popup = new maplibregl.Popup({ offset: 15, closeButton: false }).setHTML(popupHtml);
 
         const m = new maplibregl.Marker({ element: el })
-          .setLngLat([dp.longitude, dp.latitude])
+          .setLngLat([lng, lat])
           .setPopup(popup)
           .addTo(map);
         deliveryMarkersRef.current.push(m);
       });
+
+      // Fit map bounds to show all delivery points and central depot cleanly
+      if (allLngs.length > 0 && allLats.length > 0) {
+        const minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
+        const minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+        if (minLng < maxLng && minLat < maxLat) {
+          map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 90, maxZoom: 15, duration: 800 });
+        }
+      }
     }
-  }, [deliveryPoints, isMapLoaded]);
+  }, [deliveryPoints, depot, isMapLoaded]);
 
   // ── 4e. Render Vehicle Markers with Dynamic Status Badges ──────────────
   useEffect(() => {
@@ -1102,7 +1132,7 @@ export function OSMVectorNetworkMap({
     vehicleMarkersRef.current.forEach((m) => m.remove());
     vehicleMarkersRef.current = [];
 
-    if (vrpRoutes && vrpRoutes.length > 0 && currentStep && currentStep >= 3) {
+    if (vrpRoutes && vrpRoutes.length > 0 && currentStep && currentStep >= 4) {
       vrpRoutes.forEach((vr) => {
         const coords = vr.geometry?.coordinates || [];
         if (coords.length === 0) return;
@@ -1121,10 +1151,7 @@ export function OSMVectorNetworkMap({
         let borderColor = vr.color || "#00f0ff";
         let pulseStyle = "";
 
-        if (currentStep === 3) {
-          statusText = "DISPATCHED";
-          statusBg = "#475569";
-        } else if (currentStep === 7 && incident && vr.vehicle_id === incident.affected_vehicle_id) {
+        if (currentStep === 7 && incident && vr.vehicle_id === incident.affected_vehicle_id) {
           statusText = "⚠️ AFFECTED";
           statusBg = "#dc2626";
           statusColor = "#ffffff";
