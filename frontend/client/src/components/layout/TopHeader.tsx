@@ -33,14 +33,6 @@ export function TopHeader({
     <header className="h-14 bg-[#0c0e12] border-b border-slate-800 px-4 flex items-center justify-between font-mono text-xs text-white selection:bg-slate-700 select-none z-30">
       {/* Left Telemetry Strip */}
       <div className="flex items-center space-x-4">
-        {/* Network Selector */}
-        <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 px-2.5 py-1">
-          <Layers size={13} className="text-sky-400" />
-          <span className="text-slate-400 uppercase font-semibold text-[11px]">NETWORK:</span>
-          <span className="font-bold text-white">Rajpur Urban Network</span>
-          <ChevronDown size={12} className="text-slate-500 ml-1" />
-        </div>
-
         {/* Live Simulation Indicator */}
         <div className="hidden md:flex items-center space-x-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 text-emerald-400 font-semibold">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
