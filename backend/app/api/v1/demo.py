@@ -71,6 +71,7 @@ async def get_demo_scenario():
             incidents = await fetch_table_data(client, "incidents")
             optimization_runs = await fetch_table_data(client, "optimization_runs")
             optimization_results = await fetch_table_data(client, "optimization_results")
+            profiles = await fetch_table_data(client, "profiles")
 
             return {
                 "scenario_id": "QFLOW_JURY_DEMO_01",
@@ -86,7 +87,8 @@ async def get_demo_scenario():
                 "restrictions": restrictions,
                 "incidents": incidents,
                 "optimization_runs": optimization_runs,
-                "optimization_results": optimization_results
+                "optimization_results": optimization_results,
+                "profiles": profiles
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch scenario: {str(e)}")

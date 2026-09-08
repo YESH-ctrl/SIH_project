@@ -119,16 +119,60 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
     fetchBackendData();
   }, []);
 
-  const totalVehiclesCount = scenario?.vehicles?.length ?? data.totalVehicles;
-  const activeVehiclesCount = scenario?.vehicles?.filter((v: any) => v.status !== "Idle" && v.status !== "MAINTENANCE")?.length ?? data.activeVehicles;
+  // Dynamic calculations from Supabase tables
+  const vehiclesList = scenario?.vehicles || [];
+  const totalVehiclesCount = vehiclesList.length > 0 ? vehiclesList.length : data.totalVehicles;
+
+  const idleVehiclesCount = vehiclesList.length > 0
+    ? vehiclesList.filter((v: any) => (v.status || "").toUpperCase() === "IDLE").length
+    : (data.fleetHealth?.idle ?? 0);
+
+  const maintenanceVehiclesCount = vehiclesList.length > 0
+    ? vehiclesList.filter((v: any) => (v.status || "").toUpperCase() === "MAINTENANCE").length
+    : (data.fleetHealth?.maintenance ?? 0);
+
+  const activeVehiclesCount = vehiclesList.length > 0
+    ? Math.max(0, totalVehiclesCount - idleVehiclesCount - maintenanceVehiclesCount)
+    : data.activeVehicles;
+
   const totalStopsCount = scenario?.delivery_points?.length ?? data.totalDeliveryPoints;
   const activeRoutesCount = scenario?.routes?.length ?? data.activeRoutes;
-  const totalUsersCount = data.usersOverview?.total ?? 23;
 
-  // Calculate payload capacity sum in Tons
-  const totalPayloadTons = scenario?.vehicles
-    ? Math.round(scenario.vehicles.reduce((acc: number, v: any) => acc + (v.capacity_kg || v.capacity || 1000), 0) / 1000)
-    : 48.5;
+  // Calculate payload capacity sum in Tons (never display 0)
+  const sumCapacityKg = vehiclesList.reduce((acc: number, v: any) => acc + (v.capacity_kg || v.capacity || 1200), 0);
+  const totalPayloadTons = sumCapacityKg > 0 ? Math.round((sumCapacityKg / 1000) * 10) / 10 : 48.5;
+
+  // Dynamic Profiles / Users from Supabase profiles table
+  const profilesList: any[] = (scenario?.profiles && scenario.profiles.length > 0)
+    ? scenario.profiles
+    : (data.usersOverview?.recentUsers || []);
+
+  const totalUsersCount = (scenario?.profiles && scenario.profiles.length > 0)
+    ? scenario.profiles.length
+    : (data.usersOverview?.total || profilesList.length);
+
+  const opsManagersCount = (scenario?.profiles && scenario.profiles.length > 0)
+    ? scenario.profiles.filter((p: any) => (p.role || "").toUpperCase().includes("OPERATIONS")).length
+    : (data.usersOverview?.opsManagers || 4);
+
+  const dispatchersCount = (scenario?.profiles && scenario.profiles.length > 0)
+    ? scenario.profiles.filter((p: any) => (p.role || "").toUpperCase().includes("DISPATCHER")).length
+    : (data.usersOverview?.dispatchers || 12);
+
+  const analystsCount = (scenario?.profiles && scenario.profiles.length > 0)
+    ? scenario.profiles.filter((p: any) => (p.role || "").toUpperCase().includes("ANALYST")).length
+    : (data.usersOverview?.analysts || 5);
+
+  const orgAdminsCount = (scenario?.profiles && scenario.profiles.length > 0)
+    ? scenario.profiles.filter((p: any) => (p.role || "").toUpperCase().includes("ADMIN")).length
+    : (data.usersOverview?.orgAdmins || 2);
+
+  const dynamicRoleDistribution = [
+    { role: "Operations Managers", count: opsManagersCount, color: "#38bdf8" },
+    { role: "Dispatchers", count: dispatchersCount, color: "#a855f7" },
+    { role: "Analysts", count: analystsCount, color: "#f59e0b" },
+    { role: "Org Admins", count: orgAdminsCount, color: "#10b981" },
+  ];
 
   return (
     <div className="space-y-6 font-sans select-none">
@@ -223,9 +267,9 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
           </div>
           <div className="text-2xl font-bold text-emerald-400 tracking-tight my-1">{activeVehiclesCount}</div>
           <div className="w-full bg-slate-800 h-1.5 my-1 rounded-full overflow-hidden">
-            <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${Math.round((activeVehiclesCount / totalVehiclesCount) * 100)}%` }} />
+            <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${totalVehiclesCount > 0 ? Math.round((activeVehiclesCount / totalVehiclesCount) * 100) : 100}%` }} />
           </div>
-          <span className="text-[9px] text-slate-400">{Math.round((activeVehiclesCount / totalVehiclesCount) * 100)}% Duty Cycle</span>
+          <span className="text-[9px] text-slate-400">{totalVehiclesCount > 0 ? Math.round((activeVehiclesCount / totalVehiclesCount) * 100) : 100}% Duty Cycle</span>
         </div>
 
         {/* Card 3: Delivery Points */}
@@ -312,7 +356,7 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 font-mono">
-              {data.roleDistribution.map((item, i) => (
+              {dynamicRoleDistribution.map((item, i) => (
                 <div
                   key={i}
                   className="p-3.5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all"
@@ -328,24 +372,34 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
             {/* Recently Provisioned Accounts */}
             <div>
               <div className="text-[11px] font-mono text-slate-400 uppercase font-bold mb-2 flex items-center justify-between">
-                <span>RECENTLY PROVISIONED ACCOUNTS</span>
+                <span>RECENTLY PROVISIONED ACCOUNTS (PROFILES TABLE)</span>
                 <span className="text-[10px] text-slate-500 font-normal">SUPABASE RLS POLICY ACTIVE</span>
               </div>
               <div className="divide-y divide-slate-800/80 font-mono text-xs bg-slate-900/30 border border-slate-800/60 p-2">
-                {data.usersOverview.recentUsers.map((user, idx) => (
-                  <div key={idx} className="py-2.5 px-2 flex items-center justify-between hover:bg-slate-800/30 transition-all">
-                    <div>
-                      <div className="text-white font-bold text-xs">{user.name}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{user.email}</div>
+                {profilesList.map((user: any, idx: number) => {
+                  const userName = user.full_name || user.name || user.email || "Provisioned User";
+                  const userEmail = user.email || "user@qswarm.io";
+                  const roleName = (user.role || "DISPATCHER").toUpperCase();
+                  const rawDate = user.created_at || user.date || "Recently";
+                  const dateDisplay = typeof rawDate === "string" && rawDate.includes("T")
+                    ? rawDate.split("T")[0]
+                    : rawDate;
+
+                  return (
+                    <div key={user.id || idx} className="py-2.5 px-2 flex items-center justify-between hover:bg-slate-800/30 transition-all">
+                      <div>
+                        <div className="text-white font-bold text-xs">{userName}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{userEmail}</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-2.5 py-0.5 bg-slate-800 border border-slate-700 text-amber-400 text-[10px] font-bold">
+                          {roleName}
+                        </span>
+                        <div className="text-[9px] text-slate-500 mt-1">{dateDisplay}</div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="px-2.5 py-0.5 bg-slate-800 border border-slate-700 text-amber-400 text-[10px] font-bold">
-                        {user.role}
-                      </span>
-                      <div className="text-[9px] text-slate-500 mt-1">{user.date}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -402,7 +456,7 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
                 <Truck size={16} className="text-amber-400 mr-2" />
                 FLEET HEALTH & CAPACITY OVERVIEW
               </h2>
-              <span className="text-[10px] font-mono text-slate-400 font-bold">
+              <span className="text-[10px] font-mono text-emerald-400 font-bold">
                 {totalPayloadTons} TONS TOTAL
               </span>
             </div>
@@ -414,27 +468,27 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
                   <span className="font-bold text-emerald-400">{activeVehiclesCount} / {totalVehiclesCount}</span>
                 </div>
                 <div className="w-full bg-slate-800 h-2">
-                  <div className="bg-emerald-400 h-2 transition-all duration-500" style={{ width: `${(activeVehiclesCount / totalVehiclesCount) * 100}%` }} />
+                  <div className="bg-emerald-400 h-2 transition-all duration-500" style={{ width: `${totalVehiclesCount > 0 ? (activeVehiclesCount / totalVehiclesCount) * 100 : 100}%` }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1">
                   <span>IDLE / RESERVE</span>
-                  <span className="font-bold text-slate-400">{data.fleetHealth.idle} VEHICLES</span>
+                  <span className="font-bold text-slate-400">{idleVehiclesCount} VEHICLES</span>
                 </div>
                 <div className="w-full bg-slate-800 h-2">
-                  <div className="bg-slate-500 h-2 transition-all duration-500" style={{ width: `${(data.fleetHealth.idle / totalVehiclesCount) * 100}%` }} />
+                  <div className="bg-slate-500 h-2 transition-all duration-500" style={{ width: `${totalVehiclesCount > 0 ? (idleVehiclesCount / totalVehiclesCount) * 100 : 0}%` }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-300 mb-1">
                   <span>MAINTENANCE BAY</span>
-                  <span className="font-bold text-amber-400">{data.fleetHealth.maintenance} VEHICLES</span>
+                  <span className="font-bold text-amber-400">{maintenanceVehiclesCount} VEHICLES</span>
                 </div>
                 <div className="w-full bg-slate-800 h-2">
-                  <div className="bg-amber-400 h-2 transition-all duration-500" style={{ width: `${(data.fleetHealth.maintenance / totalVehiclesCount) * 100}%` }} />
+                  <div className="bg-amber-400 h-2 transition-all duration-500" style={{ width: `${totalVehiclesCount > 0 ? (maintenanceVehiclesCount / totalVehiclesCount) * 100 : 0}%` }} />
                 </div>
               </div>
             </div>

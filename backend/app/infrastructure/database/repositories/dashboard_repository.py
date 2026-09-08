@@ -24,6 +24,18 @@ class DashboardRepository:
             user_stmt = select(func.count(Profile.id)).where(Profile.organization_id == organization_id)
             user_count = (await self.db.execute(user_stmt)).scalar() or 0
 
+            profiles_stmt = select(Profile).where(Profile.organization_id == organization_id).order_by(Profile.created_at.desc()).limit(10)
+            profiles_res = (await self.db.execute(profiles_stmt)).scalars().all()
+            recent_profiles = [
+                {
+                    "name": p.full_name,
+                    "email": p.email,
+                    "role": p.role.value if hasattr(p.role, "value") else str(p.role),
+                    "date": p.created_at.strftime("%Y-%m-%d %H:%M") if p.created_at else "Recently"
+                }
+                for p in profiles_res
+            ]
+
             veh_stmt = select(func.count(Vehicle.id)).where(Vehicle.organization_id == organization_id)
             veh_count = (await self.db.execute(veh_stmt)).scalar() or 0
 
@@ -34,13 +46,14 @@ class DashboardRepository:
             active_veh_count = (await self.db.execute(active_veh_stmt)).scalar() or 0
 
             return {
-                "total_users": user_count if user_count > 0 else 4,
+                "total_users": user_count if user_count > 0 else len(recent_profiles),
+                "recent_users": recent_profiles,
                 "total_vehicles": veh_count if veh_count > 0 else 40,
                 "active_vehicles": active_veh_count if active_veh_count > 0 else 32,
                 "system_health": 99.8,
             }
         except Exception:
-            return {"total_users": 4, "total_vehicles": 40, "active_vehicles": 32, "system_health": 99.8}
+            return {"total_users": 4, "recent_users": [], "total_vehicles": 40, "active_vehicles": 32, "system_health": 99.8}
 
     async def get_operations_metrics(self, organization_id: str) -> Dict[str, Any]:
         """Aggregate operations metrics dynamically from Supabase database."""

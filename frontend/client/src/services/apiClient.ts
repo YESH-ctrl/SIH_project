@@ -379,6 +379,15 @@ export interface DemoScenarioResponse {
   }[];
   optimization_runs: any[];
   optimization_results: any[];
+  profiles?: {
+    id: string;
+    auth_user_id?: string;
+    full_name?: string;
+    email?: string;
+    role?: string;
+    organization_id?: string;
+    created_at?: string;
+  }[];
 }
 
 export const demoApi = {

@@ -66,7 +66,7 @@ class DashboardService:
                 "opsManagers": 4,
                 "dispatchers": 12,
                 "analysts": 5,
-                "recentUsers": [
+                "recentUsers": metrics.get("recent_users") if metrics.get("recent_users") else [
                     {"name": "Sienna Miller", "email": "dispatcher@qswarm.io", "role": "DISPATCHER", "date": "Today, 08:15"},
                     {"name": "Commander Sarah Jenkins", "email": "ops@qswarm.io", "role": "OPERATIONS_MANAGER", "date": "Yesterday, 16:40"},
                     {"name": "Marcus Sterling", "email": "analyst@qswarm.io", "role": "ANALYST", "date": "2 days ago"},
