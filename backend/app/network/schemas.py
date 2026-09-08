@@ -69,6 +69,18 @@ class NetworkStatsResponse(BaseModel):
     is_valid: bool = True
 
 
+class NearestNodeRequest(BaseModel):
+    latitude: float
+    longitude: float
+
+
+class NearestNodeResponse(BaseModel):
+    node_id: str
+    latitude: float
+    longitude: float
+    distance_meters: float
+
+
 class ShortestPathRouteRequest(BaseModel):
     source_lat: Optional[float] = None
     source_lng: Optional[float] = None
@@ -82,10 +94,20 @@ class ShortestPathRouteResponse(BaseModel):
     network_id: str
     source_node_id: str
     target_node_id: str
-    node_path: List[str]
-    edge_count: int
-    total_distance_meters: float
-    total_distance_km: float
-    total_travel_time_seconds: float
-    total_travel_time_min: float
+    node_ids: List[str] = []
+    edge_ids: List[str] = []
+    distance_meters: float = 0.0
+    distance_km: float = 0.0
+    travel_time_seconds: float = 0.0
+    travel_time_min: float = 0.0
+    node_count: int = 0
+    edge_count: int = 0
+    geometry: Dict[str, Any] = Field(default_factory=lambda: {"type": "LineString", "coordinates": []})
+    algorithm: str = "Dijkstra (Static Weight)"
+    # Backwards compatibility fields
+    node_path: List[str] = []
+    total_distance_meters: float = 0.0
+    total_distance_km: float = 0.0
+    total_travel_time_seconds: float = 0.0
+    total_travel_time_min: float = 0.0
     path_coordinates: List[List[float]] = []  # List of [lat, lng] pairs

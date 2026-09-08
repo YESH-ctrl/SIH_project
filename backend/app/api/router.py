@@ -5,6 +5,8 @@ from app.api.v1.delivery_points import router as delivery_points_router
 from app.api.v1.traffic import router as traffic_router
 from app.api.v1.restrictions import router as restrictions_router
 from app.api.v1.networks import router as networks_router
+from app.api.v1.optimization import router as optimization_router
+from app.api.v1.demo import router as demo_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(dashboards_router)
@@ -13,4 +15,7 @@ api_router.include_router(delivery_points_router)
 api_router.include_router(traffic_router)
 api_router.include_router(restrictions_router)
 api_router.include_router(networks_router)
+api_router.include_router(optimization_router)
+api_router.include_router(demo_router)
+
 

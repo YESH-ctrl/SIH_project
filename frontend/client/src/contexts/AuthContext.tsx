@@ -157,23 +157,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let isMounted = true;
 
     async function initSession() {
-      if (isSupabaseConfigured) {
-        const { data } = await supabase.auth.getSession();
-        if (data.session?.user && isMounted) {
-          setUser(data.session.user);
-          await fetchSupabaseProfile(data.session.user);
-        }
-      } else {
-        // Restore local demo session
-        try {
-          const savedDemo = localStorage.getItem(DEMO_STORAGE_KEY);
-          if (savedDemo && isMounted) {
-            const parsed = JSON.parse(savedDemo);
+      // 1. Restore local demo session if available
+      try {
+        const savedDemo = localStorage.getItem(DEMO_STORAGE_KEY);
+        if (savedDemo && isMounted) {
+          const parsed = JSON.parse(savedDemo);
+          if (parsed?.profile && parsed?.org) {
             setProfile(parsed.profile);
             setOrganization(parsed.org);
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch {
+        localStorage.removeItem(DEMO_STORAGE_KEY);
+      }
+
+      if (isSupabaseConfigured) {
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (data.session?.user && isMounted) {
+            setUser(data.session.user);
+            await fetchSupabaseProfile(data.session.user);
           }
         } catch {
-          localStorage.removeItem(DEMO_STORAGE_KEY);
+          // ignore error
         }
       }
 
@@ -188,12 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           setUser(session.user);
           await fetchSupabaseProfile(session.user);
-        } else {
-          setUser(null);
-          setProfile(null);
-          setOrganization(null);
         }
-        setIsLoading(false);
       });
 
       return () => {
@@ -207,40 +210,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     const cleanEmail = email.toLowerCase().trim();
 
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password,
-      });
-
-      if (!error && data.user) {
-        setUser(data.user);
-        await fetchSupabaseProfile(data.user);
-        return { success: true };
-      }
-
-      // If live Supabase auth fails (e.g. demo credentials not seeded in auth.users yet),
-      // allow instant login using DEMO_PROFILES fallback.
-      const demo = DEMO_PROFILES[cleanEmail];
-      if (demo) {
-        setProfile(demo.profile);
-        setOrganization(demo.org);
-        localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(demo));
-        return { success: true };
-      }
-
-      if (error) {
-        return { success: false, message: error.message };
-      }
-    }
-
-    // Demo Mode Fallback
+    // Direct Instant Demo Profile Login
     const demo = DEMO_PROFILES[cleanEmail];
     if (demo) {
       setProfile(demo.profile);
       setOrganization(demo.org);
       localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(demo));
       return { success: true };
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+
+        if (!error && data.user) {
+          setUser(data.user);
+          await fetchSupabaseProfile(data.user);
+          return { success: true };
+        }
+        if (error) {
+          return { success: false, message: error.message };
+        }
+      } catch (err: any) {
+        console.warn("[AuthContext] Supabase sign in error:", err);
+        return { success: false, message: err?.message || "Sign in error" };
+      }
     }
 
     // Dynamic Local Demo User Creation

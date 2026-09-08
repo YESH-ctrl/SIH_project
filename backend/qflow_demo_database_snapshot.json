@@ -1,0 +1,22 @@
+{
+  "scenario": "QFLOW_JURY_DEMO_01",
+  "organization_count": 1,
+  "network_count": 4,
+  "network_node_count": 9053,
+  "network_edge_count": 11806,
+  "depot_count": 2,
+  "vehicle_count": 3,
+  "customer_count": 10,
+  "delivery_point_count": 10,
+  "route_count": 3,
+  "route_stop_count": 10,
+  "traffic_state_count": 2,
+  "restriction_count": 1,
+  "incident_count": 1,
+  "optimization_run_count": 0,
+  "optimization_result_count": 0,
+  "total_fleet_capacity": 160.0,
+  "total_delivery_demand": 139.0,
+  "orphan_count": 0,
+  "database_valid": true
+}

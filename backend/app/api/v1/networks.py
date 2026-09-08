@@ -15,6 +15,8 @@ from app.network.schemas import (
     NetworkStatsResponse,
     ShortestPathRouteRequest,
     ShortestPathRouteResponse,
+    NearestNodeRequest,
+    NearestNodeResponse,
 )
 
 router = APIRouter(prefix="/networks", tags=["Road Network & OSM Module"])
@@ -142,4 +144,28 @@ async def calculate_shortest_path_route(
         return await service.calculate_shortest_path(network_id, user.organization_id, req)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post(
+    "/{network_id}/nearest-node",
+    response_model=NearestNodeResponse,
+    dependencies=[Depends(require_permission(Permission.NETWORK_VIEW))]
+)
+async def get_nearest_network_node(
+    network_id: str,
+    req: NearestNodeRequest,
+    user: UserContext = Depends(get_current_user)
+):
+    """Find the nearest network node to latitude/longitude belonging strictly to the target network."""
+    service = NetworkService(db=None)
+    try:
+        return await service.get_nearest_node(
+            network_id=network_id,
+            organization_id=user.organization_id,
+            lat=req.latitude,
+            lng=req.longitude
+        )
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
 
