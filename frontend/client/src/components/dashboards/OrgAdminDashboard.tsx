@@ -1,5 +1,6 @@
-import React from "react";
-import { getAdminDashboardData } from "@/services/dashboardService";
+import React, { useState, useEffect } from "react";
+import { getAdminDashboardData, AdminDashboardData } from "@/services/dashboardService";
+import { dashboardApi, demoApi } from "@/services/apiClient";
 import {
   Building2,
   Users,
@@ -16,6 +17,14 @@ import {
   SlidersHorizontal,
   UserPlus,
   Shield,
+  Database,
+  Zap,
+  MapPin,
+  RefreshCw,
+  TrendingUp,
+  Cpu,
+  Server,
+  KeyRound,
 } from "lucide-react";
 
 interface OrgAdminDashboardProps {
@@ -23,134 +32,317 @@ interface OrgAdminDashboardProps {
 }
 
 export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
-  const data = getAdminDashboardData();
+  const [data, setData] = useState<AdminDashboardData>(getAdminDashboardData());
+  const [scenario, setScenario] = useState<any | null>(null);
+  const [isLive, setIsLive] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  const fetchBackendData = async () => {
+    setIsRefreshing(true);
+    try {
+      const [adminRes, scenarioRes] = await Promise.allSettled([
+        dashboardApi.getAdminDashboard(),
+        demoApi.getScenario(),
+      ]);
+
+      if (adminRes.status === "fulfilled" && adminRes.value) {
+        const raw = adminRes.value;
+        const mapped: AdminDashboardData = {
+          organizationName: raw.organization_name ?? raw.organizationName ?? "SIH 2026 Fleet Operations",
+          totalVehicles: raw.total_vehicles ?? raw.totalVehicles ?? 40,
+          activeVehicles: raw.active_vehicles ?? raw.activeVehicles ?? 32,
+          totalDeliveryPoints: raw.total_delivery_points ?? raw.totalDeliveryPoints ?? 300,
+          activeRoutes: raw.active_routes ?? raw.activeRoutes ?? 28,
+          avgUtilization: raw.avg_utilization ?? raw.avgUtilization ?? 84.2,
+          networkCongestion: raw.network_congestion ?? raw.networkCongestion ?? 38,
+          completedDeliveriesToday: raw.completed_deliveries_today ?? raw.completedDeliveriesToday ?? 248,
+          systemHealthPercent: raw.system_health_percent ?? raw.systemHealthPercent ?? 99.8,
+          roleDistribution: (raw.role_distribution ?? raw.roleDistribution ?? []).map((r: any) => ({
+            role: r.role,
+            count: r.count,
+            color: r.color || "#38bdf8",
+          })),
+          fleetHealth: raw.fleet_health ?? raw.fleetHealth ?? { active: 32, idle: 5, maintenance: 3 },
+          operationsSummary: raw.operations_summary ?? raw.operationsSummary ?? {
+            completed: 248,
+            inProgress: 28,
+            delayed: 4,
+            exceptions: 2,
+            avgTimeMin: 34.5,
+          },
+          networkHealth: raw.network_health ?? raw.networkHealth ?? {
+            congestionPercent: 38,
+            avgSpeedKmh: 32,
+            majorEventsCount: 1,
+            affectedZones: ["Zone 3 Express", "Rajpur Central Corridor"],
+            optimizationStatus: "OPTIMIZED",
+          },
+          usersOverview: raw.users_overview ?? raw.usersOverview ?? {
+            total: 23,
+            opsManagers: 4,
+            dispatchers: 12,
+            analysts: 5,
+            recentUsers: [
+              { name: "Sienna Miller", email: "dispatcher@qswarm.io", role: "DISPATCHER", date: "Today, 08:15" },
+              { name: "Commander Sarah Jenkins", email: "ops@qswarm.io", role: "OPERATIONS_MANAGER", date: "Yesterday, 16:40" },
+              { name: "Marcus Sterling", email: "analyst@qswarm.io", role: "ANALYST", date: "2 days ago" },
+            ],
+          },
+          recentActivity: (raw.recent_activity ?? raw.recentActivity ?? []).map((act: any) => ({
+            id: act.id,
+            time: act.time,
+            type: act.type,
+            title: act.title,
+            desc: act.desc,
+          })),
+        };
+
+        if (!mapped.roleDistribution || mapped.roleDistribution.length === 0) {
+          mapped.roleDistribution = getAdminDashboardData().roleDistribution;
+        }
+
+        setData(mapped);
+        setIsLive(true);
+      }
+
+      if (scenarioRes.status === "fulfilled" && scenarioRes.value) {
+        setScenario(scenarioRes.value);
+      }
+    } catch (err) {
+      console.warn("[Q-FLOW Dashboard] Error fetching Admin Dashboard data:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBackendData();
+  }, []);
+
+  const totalVehiclesCount = scenario?.vehicles?.length ?? data.totalVehicles;
+  const activeVehiclesCount = scenario?.vehicles?.filter((v: any) => v.status !== "Idle" && v.status !== "MAINTENANCE")?.length ?? data.activeVehicles;
+  const totalStopsCount = scenario?.delivery_points?.length ?? data.totalDeliveryPoints;
+  const activeRoutesCount = scenario?.routes?.length ?? data.activeRoutes;
+  const totalUsersCount = data.usersOverview?.total ?? 23;
+
+  // Calculate payload capacity sum in Tons
+  const totalPayloadTons = scenario?.vehicles
+    ? Math.round(scenario.vehicles.reduce((acc: number, v: any) => acc + (v.capacity_kg || v.capacity || 1000), 0) / 1000)
+    : 48.5;
 
   return (
-    <div className="space-y-6 font-sans">
-      {/* Header Banner */}
-      <div className="p-5 bg-gradient-to-r from-slate-900 via-[#0e131b] to-slate-900 border border-slate-800 rounded-none shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2 mb-1 font-mono text-xs text-emerald-400 uppercase tracking-wider">
-            <ShieldCheck size={14} />
-            <span>ORGANIZATION GOVERNANCE & CONTROL CENTER</span>
+    <div className="space-y-6 font-sans select-none">
+      {/* Header Glassmorphism Banner */}
+      <div className="p-6 bg-gradient-to-r from-[#0a0d14] via-[#0d121c] to-[#090b10] border border-slate-800/90 rounded-none shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
+        {/* Glow accent element */}
+        <div className="absolute top-0 right-0 w-96 h-full bg-emerald-500/5 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5 font-mono text-xs uppercase tracking-wider">
+            <span className="flex items-center text-emerald-400 font-bold space-x-1.5">
+              <ShieldCheck size={15} />
+              <span>ORGANIZATION GOVERNANCE & CONTROL CENTER</span>
+            </span>
+            {isLive ? (
+              <span className="px-2.5 py-0.5 bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-sm">
+                <Database size={11} className="text-emerald-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                SUPABASE LIVE API
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 text-[10px] font-bold rounded-full flex items-center gap-1.5">
+                <Server size={11} />
+                CONNECTING BACKEND...
+              </span>
+            )}
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center font-mono">
-            {data.organizationName}
+
+          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center font-mono">
+            {scenario?.organization?.name || data.organizationName}
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            System-level health, user role allocation, fleet capacity governance, and network oversight.
+          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+            Real-time multi-agent fleet operations, quantum route optimization, row-level security governance, and capacity oversight.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2.5 relative z-10 font-mono">
+          <button
+            onClick={fetchBackendData}
+            disabled={isRefreshing}
+            className="p-2.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-all shadow-md"
+            title="Refresh Live Data from Supabase"
+          >
+            <RefreshCw size={14} className={isRefreshing ? "animate-spin text-emerald-400" : ""} />
+          </button>
           <button
             onClick={() => onNavigate("users")}
-            className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-1.5"
+            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-2 shadow-lg shadow-emerald-500/10"
           >
             <UserPlus size={14} />
             <span>MANAGE USERS</span>
           </button>
           <button
-            onClick={() => onNavigate("network-config")}
-            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-mono text-xs uppercase tracking-wider transition-all flex items-center space-x-1.5"
+            onClick={() => onNavigate("vehicles")}
+            className="px-4 py-2.5 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/40 text-sky-400 font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-2"
+          >
+            <Truck size={14} />
+            <span>MANAGE FLEET</span>
+          </button>
+          <button
+            onClick={() => onNavigate("network-map")}
+            className="px-4 py-2.5 bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-white text-xs uppercase tracking-wider transition-all flex items-center space-x-2"
           >
             <Settings size={14} />
-            <span>ORG SETTINGS</span>
+            <span>CONFIG NETWORK</span>
           </button>
         </div>
       </div>
 
-      {/* Top Level KPIs */}
+      {/* Dynamic 8 Executive KPI Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 font-mono">
-        <div className="bg-[#0b0c0e] border border-slate-800 p-3.5 flex flex-col justify-between">
-          <span className="text-[10px] text-slate-400 uppercase">TOTAL VEHICLES</span>
-          <div className="text-xl font-bold text-white mt-1">{data.totalVehicles}</div>
-          <span className="text-[9px] text-emerald-400 mt-1">100% Provisioned</span>
+        {/* Card 1: Total Fleet */}
+        <div className="bg-[#090b0e] border border-slate-800/90 p-4 flex flex-col justify-between hover:border-slate-700 transition-all relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-slate-400 group-hover:bg-emerald-400 transition-colors" />
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider">TOTAL VEHICLES</span>
+            <Truck size={13} className="text-slate-500" />
+          </div>
+          <div className="text-2xl font-bold text-white tracking-tight my-1">{totalVehiclesCount}</div>
+          <div className="flex items-center justify-between text-[9px] text-emerald-400 mt-1">
+            <span>100% Provisioned</span>
+            <span className="text-slate-500">{totalPayloadTons}t Payload</span>
+          </div>
         </div>
 
-        <div className="bg-[#0b0c0e] border border-slate-800 p-3.5 flex flex-col justify-between">
-          <span className="text-[10px] text-slate-400 uppercase">ACTIVE FLEET</span>
-          <div className="text-xl font-bold text-emerald-400 mt-1">{data.activeVehicles}</div>
-          <span className="text-[9px] text-slate-500 mt-1">80% Duty Cycle</span>
+        {/* Card 2: Active Fleet */}
+        <div className="bg-[#090b0e] border border-slate-800/90 p-4 flex flex-col justify-between hover:border-slate-700 transition-all relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-emerald-500" />
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider">ACTIVE FLEET</span>
+            <Activity size={13} className="text-emerald-400" />
+          </div>
+          <div className="text-2xl font-bold text-emerald-400 tracking-tight my-1">{activeVehiclesCount}</div>
+          <div className="w-full bg-slate-800 h-1.5 my-1 rounded-full overflow-hidden">
+            <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${Math.round((activeVehiclesCount / totalVehiclesCount) * 100)}%` }} />
+          </div>
+          <span className="text-[9px] text-slate-400">{Math.round((activeVehiclesCount / totalVehiclesCount) * 100)}% Duty Cycle</span>
         </div>
 
-        <div className="bg-[#0b0c0e] border border-slate-800 p-3.5 flex flex-col justify-between">
-          <span className="text-[10px] text-slate-400 uppercase">DELIVERY POINTS</span>
-          <div className="text-xl font-bold text-sky-400 mt-1">{data.totalDeliveryPoints}</div>
-          <span className="text-[9px] text-slate-500 mt-1">3 Active Depots</span>
+        {/* Card 3: Delivery Points */}
+        <div className="bg-[#090b0e] border border-slate-800/90 p-4 flex flex-col justify-between hover:border-slate-700 transition-all relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-sky-500" />
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider">DELIVERY NODES</span>
+            <MapPin size={13} className="text-sky-400" />
+          </div>
+          <div className="text-2xl font-bold text-sky-400 tracking-tight my-1">{totalStopsCount}</div>
+          <span className="text-[9px] text-slate-400">Rajpur Depot Hubs</span>
         </div>
 
-        <div className="bg-[#0b0c0e] border border-slate-800 p-3.5 flex flex-col justify-between">
-          <span className="text-[10px] text-slate-400 uppercase">ACTIVE ROUTES</span>
-          <div className="text-xl font-bold text-white mt-1">{data.activeRoutes}</div>
-          <span className="text-[9px] text-slate-500 mt-1">Live Dispatched</span>
+        {/* Card 4: Active Routes */}
+        <div className="bg-[#090b0e] border border-slate-800/90 p-4 flex flex-col justify-between hover:border-slate-700 transition-all relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-purple-500" />
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider">DISPATCHED ROUTES</span>
+            <Layers size={13} className="text-purple-400" />
+          </div>
+          <div className="text-2xl font-bold text-white tracking-tight my-1">{activeRoutesCount}</div>
+          <span className="text-[9px] text-purple-400">Live Dispatched</span>
         </div>
 
-        <div className="bg-[#0b0c0e] border border-slate-800 p-3.5 flex flex-col justify-between">
-          <span className="text-[10px] text-slate-400 uppercase">UTILIZATION</span>
-          <div className="text-xl font-bold text-amber-400 mt-1">{data.avgUtilization}%</div>
-          <span className="text-[9px] text-emerald-400 mt-1">+4.2% Optimal</span>
+        {/* Card 5: Fleet Utilization */}
+        <div className="bg-[#090b0e] border border-slate-800/90 p-4 flex flex-col justify-between hover:border-slate-700 transition-all relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-amber-500" />
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider">UTILIZATION</span>
+            <TrendingUp size={13} className="text-amber-400" />
+          </div>
+          <div className="text-2xl font-bold text-amber-400 tracking-tight my-1">{data.avgUtilization}%</div>
+          <span className="text-[9px] text-emerald-400">+4.2% Optimal</span>
         </div>
 
-        <div className="bg-[#0b0c0e] border border-slate-800 p-3.5 flex flex-col justify-between">
-          <span className="text-[10px] text-slate-400 uppercase">CONGESTION</span>
-          <div className="text-xl font-bold text-amber-400 mt-1">{data.networkCongestion}%</div>
-          <span className="text-[9px] text-amber-400 mt-1">Moderate Flow</span>
+        {/* Card 6: Network Congestion */}
+        <div className="bg-[#090b0e] border border-slate-800/90 p-4 flex flex-col justify-between hover:border-slate-700 transition-all relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-rose-500" />
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider">CONGESTION</span>
+            <AlertTriangle size={13} className="text-amber-400" />
+          </div>
+          <div className="text-2xl font-bold text-amber-400 tracking-tight my-1">{data.networkCongestion}%</div>
+          <span className="text-[9px] text-amber-400">Moderate Flow</span>
         </div>
 
-        <div className="bg-[#0b0c0e] border border-slate-800 p-3.5 flex flex-col justify-between">
-          <span className="text-[10px] text-slate-400 uppercase">COMPLETED</span>
-          <div className="text-xl font-bold text-emerald-400 mt-1">{data.completedDeliveriesToday}</div>
-          <span className="text-[9px] text-slate-500 mt-1">Stops Served Today</span>
+        {/* Card 7: Completed Deliveries */}
+        <div className="bg-[#090b0e] border border-slate-800/90 p-4 flex flex-col justify-between hover:border-slate-700 transition-all relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-emerald-400" />
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider">COMPLETED</span>
+            <CheckCircle2 size={13} className="text-emerald-400" />
+          </div>
+          <div className="text-2xl font-bold text-emerald-400 tracking-tight my-1">{data.completedDeliveriesToday}</div>
+          <span className="text-[9px] text-slate-400">Stops Served Today</span>
         </div>
 
-        <div className="bg-[#0b0c0e] border border-slate-800 p-3.5 flex flex-col justify-between">
-          <span className="text-[10px] text-slate-400 uppercase">SYSTEM HEALTH</span>
-          <div className="text-xl font-bold text-emerald-400 mt-1">{data.systemHealthPercent}%</div>
-          <span className="text-[9px] text-emerald-400 mt-1">All Nodes Online</span>
+        {/* Card 8: System Health */}
+        <div className="bg-[#090b0e] border border-slate-800/90 p-4 flex flex-col justify-between hover:border-slate-700 transition-all relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-cyan-400" />
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider">SYSTEM HEALTH</span>
+            <Cpu size={13} className="text-cyan-400" />
+          </div>
+          <div className="text-2xl font-bold text-cyan-400 tracking-tight my-1">{data.systemHealthPercent}%</div>
+          <span className="text-[9px] text-emerald-400">All Nodes Online</span>
         </div>
       </div>
 
-      {/* Main Grid Section */}
+      {/* Main Grid Content Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Left Column: Organization & Users Overview */}
+        {/* Left 7 Columns: Users Distribution & Operations Metrics */}
         <div className="lg:col-span-7 space-y-5">
-          {/* Organization Overview & User Distribution */}
-          <div className="bg-[#0b0c0e] border border-slate-800 p-5">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
-              <h2 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center">
+          {/* User Roles & Access Distribution */}
+          <div className="bg-[#090b0e] border border-slate-800/90 p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+              <h2 className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center">
                 <Users size={16} className="text-emerald-400 mr-2" />
                 USER ROLES & ACCESS DISTRIBUTION
               </h2>
-              <span className="text-xs font-mono text-slate-400">TOTAL USERS: {data.usersOverview.total}</span>
+              <span className="text-xs font-mono text-slate-400 font-bold bg-slate-900 px-2.5 py-1 border border-slate-800">
+                TOTAL ACCOUNTS: {totalUsersCount}
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 font-mono">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 font-mono">
               {data.roleDistribution.map((item, i) => (
-                <div key={i} className="p-3 bg-slate-900/50 border border-slate-800/80">
-                  <div className="text-[10px] text-slate-400 uppercase">{item.role}</div>
-                  <div className="text-xl font-bold text-white mt-1" style={{ color: item.color }}>
+                <div
+                  key={i}
+                  className="p-3.5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all"
+                >
+                  <div className="text-[10px] text-slate-400 uppercase font-bold">{item.role}</div>
+                  <div className="text-2xl font-extrabold mt-1" style={{ color: item.color }}>
                     {item.count}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Recent Provisioned Users */}
-            <div className="space-y-2">
-              <div className="text-xs font-mono text-slate-400 uppercase mb-2">RECENTLY PROVISIONED ACCOUNTS</div>
-              <div className="divide-y divide-slate-800/60 font-mono text-xs">
+            {/* Recently Provisioned Accounts */}
+            <div>
+              <div className="text-[11px] font-mono text-slate-400 uppercase font-bold mb-2 flex items-center justify-between">
+                <span>RECENTLY PROVISIONED ACCOUNTS</span>
+                <span className="text-[10px] text-slate-500 font-normal">SUPABASE RLS POLICY ACTIVE</span>
+              </div>
+              <div className="divide-y divide-slate-800/80 font-mono text-xs bg-slate-900/30 border border-slate-800/60 p-2">
                 {data.usersOverview.recentUsers.map((user, idx) => (
-                  <div key={idx} className="py-2.5 flex items-center justify-between">
+                  <div key={idx} className="py-2.5 px-2 flex items-center justify-between hover:bg-slate-800/30 transition-all">
                     <div>
-                      <div className="text-white font-bold">{user.name}</div>
-                      <div className="text-[10px] text-slate-400">{user.email}</div>
+                      <div className="text-white font-bold text-xs">{user.name}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">{user.email}</div>
                     </div>
                     <div className="text-right">
-                      <span className="px-2 py-0.5 bg-slate-800 border border-slate-700 text-amber-400 text-[10px] font-bold">
+                      <span className="px-2.5 py-0.5 bg-slate-800 border border-slate-700 text-amber-400 text-[10px] font-bold">
                         {user.role}
                       </span>
-                      <div className="text-[9px] text-slate-500 mt-0.5">{user.date}</div>
+                      <div className="text-[9px] text-slate-500 mt-1">{user.date}</div>
                     </div>
                   </div>
                 ))}
@@ -158,56 +350,71 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
             </div>
           </div>
 
-          {/* Operations & Delivery Summary */}
-          <div className="bg-[#0b0c0e] border border-slate-800 p-5">
-            <h2 className="text-sm font-bold text-white font-mono uppercase tracking-wider mb-4 flex items-center">
-              <Activity size={16} className="text-sky-400 mr-2" />
-              OPERATIONAL DELIVERY METRICS
-            </h2>
+          {/* Operational Delivery Metrics Panel */}
+          <div className="bg-[#090b0e] border border-slate-800/90 p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+              <h2 className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center">
+                <Activity size={16} className="text-sky-400 mr-2" />
+                OPERATIONAL DELIVERY METRICS
+              </h2>
+              <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 border border-emerald-500/30">
+                SLA TARGET 98.5%
+              </span>
+            </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 font-mono text-center">
-              <div className="p-3 bg-slate-900/40 border border-slate-800">
-                <div className="text-[10px] text-slate-400 uppercase">COMPLETED</div>
-                <div className="text-lg font-bold text-emerald-400">{data.operationsSummary.completed}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-center mb-4">
+              <div className="p-3 bg-slate-900/50 border border-slate-800">
+                <div className="text-[10px] text-slate-400 uppercase font-bold">COMPLETED</div>
+                <div className="text-xl font-bold text-emerald-400 mt-1">{data.operationsSummary.completed}</div>
               </div>
-              <div className="p-3 bg-slate-900/40 border border-slate-800">
-                <div className="text-[10px] text-slate-400 uppercase">IN PROGRESS</div>
-                <div className="text-lg font-bold text-sky-400">{data.operationsSummary.inProgress}</div>
+              <div className="p-3 bg-slate-900/50 border border-slate-800">
+                <div className="text-[10px] text-slate-400 uppercase font-bold">IN PROGRESS</div>
+                <div className="text-xl font-bold text-sky-400 mt-1">{data.operationsSummary.inProgress}</div>
               </div>
-              <div className="p-3 bg-slate-900/40 border border-slate-800">
-                <div className="text-[10px] text-slate-400 uppercase">DELAYED</div>
-                <div className="text-lg font-bold text-amber-400">{data.operationsSummary.delayed}</div>
+              <div className="p-3 bg-slate-900/50 border border-slate-800">
+                <div className="text-[10px] text-slate-400 uppercase font-bold">DELAYED</div>
+                <div className="text-xl font-bold text-amber-400 mt-1">{data.operationsSummary.delayed}</div>
               </div>
-              <div className="p-3 bg-slate-900/40 border border-slate-800">
-                <div className="text-[10px] text-slate-400 uppercase">EXCEPTIONS</div>
-                <div className="text-lg font-bold text-red-400">{data.operationsSummary.exceptions}</div>
+              <div className="p-3 bg-slate-900/50 border border-slate-800">
+                <div className="text-[10px] text-slate-400 uppercase font-bold">EXCEPTIONS</div>
+                <div className="text-xl font-bold text-rose-400 mt-1">{data.operationsSummary.exceptions}</div>
               </div>
             </div>
 
-            <div className="mt-4 p-3 bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs font-mono">
-              <span className="text-slate-400">AVERAGE DELIVERY STOP DURATION:</span>
-              <span className="font-bold text-white">{data.operationsSummary.avgTimeMin} MIN / STOP</span>
+            <div className="p-3 bg-slate-900/80 border border-slate-800 flex items-center justify-between text-xs font-mono">
+              <span className="text-slate-400 flex items-center">
+                <Clock size={13} className="text-slate-500 mr-2" />
+                AVERAGE DELIVERY STOP DURATION:
+              </span>
+              <span className="font-bold text-white bg-slate-800 px-2 py-0.5 border border-slate-700">
+                {data.operationsSummary.avgTimeMin} MIN / STOP
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Fleet Health & System Audit */}
+        {/* Right 5 Columns: Fleet Capacity, Quick Actions & Audit Stream */}
         <div className="lg:col-span-5 space-y-5">
-          {/* Fleet Health Breakdown */}
-          <div className="bg-[#0b0c0e] border border-slate-800 p-5">
-            <h2 className="text-sm font-bold text-white font-mono uppercase tracking-wider mb-4 flex items-center">
-              <Truck size={16} className="text-amber-400 mr-2" />
-              FLEET HEALTH & CAPACITY OVERVIEW
-            </h2>
+          {/* Fleet Health & Capacity Breakdown */}
+          <div className="bg-[#090b0e] border border-slate-800/90 p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+              <h2 className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center">
+                <Truck size={16} className="text-amber-400 mr-2" />
+                FLEET HEALTH & CAPACITY OVERVIEW
+              </h2>
+              <span className="text-[10px] font-mono text-slate-400 font-bold">
+                {totalPayloadTons} TONS TOTAL
+              </span>
+            </div>
 
-            <div className="space-y-3 font-mono text-xs">
+            <div className="space-y-3.5 font-mono text-xs">
               <div>
                 <div className="flex justify-between text-slate-300 mb-1">
                   <span>ACTIVE FLEET (DUTY)</span>
-                  <span className="font-bold text-emerald-400">{data.fleetHealth.active} / {data.totalVehicles}</span>
+                  <span className="font-bold text-emerald-400">{activeVehiclesCount} / {totalVehiclesCount}</span>
                 </div>
                 <div className="w-full bg-slate-800 h-2">
-                  <div className="bg-emerald-400 h-2" style={{ width: `${(data.fleetHealth.active / data.totalVehicles) * 100}%` }} />
+                  <div className="bg-emerald-400 h-2 transition-all duration-500" style={{ width: `${(activeVehiclesCount / totalVehiclesCount) * 100}%` }} />
                 </div>
               </div>
 
@@ -217,7 +424,7 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
                   <span className="font-bold text-slate-400">{data.fleetHealth.idle} VEHICLES</span>
                 </div>
                 <div className="w-full bg-slate-800 h-2">
-                  <div className="bg-slate-500 h-2" style={{ width: `${(data.fleetHealth.idle / data.totalVehicles) * 100}%` }} />
+                  <div className="bg-slate-500 h-2 transition-all duration-500" style={{ width: `${(data.fleetHealth.idle / totalVehiclesCount) * 100}%` }} />
                 </div>
               </div>
 
@@ -227,61 +434,76 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
                   <span className="font-bold text-amber-400">{data.fleetHealth.maintenance} VEHICLES</span>
                 </div>
                 <div className="w-full bg-slate-800 h-2">
-                  <div className="bg-amber-400 h-2" style={{ width: `${(data.fleetHealth.maintenance / data.totalVehicles) * 100}%` }} />
+                  <div className="bg-amber-400 h-2 transition-all duration-500" style={{ width: `${(data.fleetHealth.maintenance / totalVehiclesCount) * 100}%` }} />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Quick Admin Actions */}
-          <div className="bg-[#0b0c0e] border border-slate-800 p-5">
-            <h2 className="text-sm font-bold text-white font-mono uppercase tracking-wider mb-3 flex items-center">
-              <SlidersHorizontal size={16} className="text-emerald-400 mr-2" />
+          <div className="bg-[#090b0e] border border-slate-800/90 p-5 shadow-xl">
+            <h2 className="text-xs font-bold text-white font-mono uppercase tracking-wider mb-3 flex items-center">
+              <SlidersHorizontal size={15} className="text-emerald-400 mr-2" />
               ADMINISTRATIVE QUICK ACTIONS
             </h2>
 
-            <div className="grid grid-cols-2 gap-2 font-mono text-xs">
+            <div className="grid grid-cols-2 gap-2.5 font-mono text-xs">
               <button
                 onClick={() => onNavigate("users")}
-                className="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left transition-all text-slate-200 hover:text-white"
+                className="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-left transition-all group"
               >
-                <div className="font-bold text-emerald-400">Manage Users</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Provision roles & access</div>
+                <div className="font-bold text-emerald-400 flex items-center justify-between">
+                  <span>Manage Users</span>
+                  <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Provision roles & permissions</div>
               </button>
+
               <button
-                onClick={() => onNavigate("live-fleet")}
-                className="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left transition-all text-slate-200 hover:text-white"
+                onClick={() => onNavigate("vehicles")}
+                className="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/40 text-left transition-all group"
               >
-                <div className="font-bold text-sky-400">Manage Fleet</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Inspect vehicle status</div>
+                <div className="font-bold text-sky-400 flex items-center justify-between">
+                  <span>Manage Fleet</span>
+                  <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Inspect vehicle parameters</div>
               </button>
+
               <button
                 onClick={() => onNavigate("network-map")}
-                className="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left transition-all text-slate-200 hover:text-white"
+                className="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 text-left transition-all group"
               >
-                <div className="font-bold text-amber-400">Configure Network</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Edit nodes & edges</div>
+                <div className="font-bold text-amber-400 flex items-center justify-between">
+                  <span>Configure Network</span>
+                  <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Edit nodes & restrictions</div>
               </button>
+
               <button
-                onClick={() => onNavigate("fleet-performance")}
-                className="p-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-left transition-all text-slate-200 hover:text-white"
+                onClick={() => onNavigate("reports")}
+                className="p-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/40 text-left transition-all group"
               >
-                <div className="font-bold text-purple-400">View Analytics</div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Executive reports</div>
+                <div className="font-bold text-purple-400 flex items-center justify-between">
+                  <span>View Reports</span>
+                  <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Executive export logs</div>
               </button>
             </div>
           </div>
 
           {/* System Activity Stream */}
-          <div className="bg-[#0b0c0e] border border-slate-800 p-5">
-            <h2 className="text-sm font-bold text-white font-mono uppercase tracking-wider mb-3 flex items-center">
-              <Clock size={16} className="text-slate-400 mr-2" />
+          <div className="bg-[#090b0e] border border-slate-800/90 p-5 shadow-xl">
+            <h2 className="text-xs font-bold text-white font-mono uppercase tracking-wider mb-3 flex items-center">
+              <Clock size={15} className="text-slate-400 mr-2" />
               SYSTEM GOVERNANCE AUDIT STREAM
             </h2>
 
-            <div className="space-y-3 font-mono text-xs">
+            <div className="space-y-2.5 font-mono text-xs">
               {data.recentActivity.map((act) => (
-                <div key={act.id} className="p-2.5 bg-slate-900/40 border border-slate-800/80">
+                <div key={act.id} className="p-3 bg-slate-900/50 border border-slate-800/80 hover:border-slate-700 transition-all">
                   <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
                     <span className="font-bold text-emerald-400">{act.type}</span>
                     <span>{act.time}</span>
@@ -297,3 +519,4 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
     </div>
   );
 }
+
