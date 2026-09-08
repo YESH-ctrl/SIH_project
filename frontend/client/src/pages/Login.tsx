@@ -252,26 +252,48 @@ export default function Login() {
 
             {/* Tabs & Form */}
             <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as any)} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-[#141414] p-1 rounded-none border border-neutral-800 mb-6">
-                <TabsTrigger
-                  value="login"
-                  className="rounded-none text-xs font-mono uppercase font-bold text-neutral-400 data-[state=active]:bg-[#c8ff00] data-[state=active]:text-black py-2.5 transition-all"
+              {/* Custom Segmented Toggle Bar */}
+              <div className="grid grid-cols-3 bg-[#111111] p-1 border border-neutral-800 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("login")}
+                  className={`flex items-center justify-center space-x-1.5 py-2.5 px-2 sm:px-3 text-xs font-mono font-bold uppercase transition-all duration-150 ${
+                    activeTab === "login"
+                      ? "bg-[#c8ff00] text-black shadow-[0_0_12px_rgba(200,255,0,0.3)]"
+                      : "text-neutral-400 hover:text-white hover:bg-white/5"
+                  }`}
                 >
-                  SIGN IN
-                </TabsTrigger>
-                <TabsTrigger
-                  value="signup"
-                  className="rounded-none text-xs font-mono uppercase font-bold text-neutral-400 data-[state=active]:bg-[#c8ff00] data-[state=active]:text-black py-2.5 transition-all"
+                  <Lock size={13} className={activeTab === "login" ? "text-black" : "text-neutral-500"} />
+                  <span>SIGN IN</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("signup")}
+                  className={`flex items-center justify-center space-x-1.5 py-2.5 px-2 sm:px-3 text-xs font-mono font-bold uppercase transition-all duration-150 ${
+                    activeTab === "signup"
+                      ? "bg-[#c8ff00] text-black shadow-[0_0_12px_rgba(200,255,0,0.3)]"
+                      : "text-neutral-400 hover:text-white hover:bg-white/5"
+                  }`}
                 >
-                  REGISTER
-                </TabsTrigger>
-                <TabsTrigger
-                  value="reset"
-                  className="rounded-none text-xs font-mono uppercase font-bold text-neutral-400 data-[state=active]:bg-[#c8ff00] data-[state=active]:text-black py-2.5 transition-all"
+                  <UserIcon size={13} className={activeTab === "signup" ? "text-black" : "text-neutral-500"} />
+                  <span>REGISTER</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("reset")}
+                  className={`flex items-center justify-center space-x-1.5 py-2.5 px-2 sm:px-3 text-xs font-mono font-bold uppercase transition-all duration-150 ${
+                    activeTab === "reset"
+                      ? "bg-[#c8ff00] text-black shadow-[0_0_12px_rgba(200,255,0,0.3)]"
+                      : "text-neutral-400 hover:text-white hover:bg-white/5"
+                  }`}
                 >
-                  RESET
-                </TabsTrigger>
-              </TabsList>
+                  <KeyRound size={13} className={activeTab === "reset" ? "text-black" : "text-neutral-500"} />
+                  <span>RESET</span>
+                </button>
+              </div>
+
 
               {/* SIGN IN TAB */}
               <TabsContent value="login" className="space-y-4 m-0">
