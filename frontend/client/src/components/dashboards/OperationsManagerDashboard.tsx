@@ -116,16 +116,17 @@ export function OperationsManagerDashboard({
 
   return (
     <div className="space-y-6 font-sans">
-      {/* Header Strip */}
-      <div className="p-5 bg-gradient-to-r from-[#0b0f17] via-[#090b0f] to-[#0b0f17] border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* Header Banner */}
+      <div className="p-5 bg-[#0d0d0d] border border-neutral-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c8ff00] via-emerald-400 to-amber-400" />
         <div>
-          <div className="flex items-center space-x-2 mb-1 font-mono text-xs text-sky-400 uppercase tracking-wider">
+          <div className="flex items-center space-x-2 mb-1 font-mono text-xs text-[#c8ff00] uppercase tracking-wider font-semibold">
             <Activity size={14} />
             <span>OPERATIONS COMMAND CENTER</span>
             {isLive && (
-              <span className="ml-2 px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1.5">
-                <Database size={11} className="text-emerald-400" />
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="ml-2 px-2 py-0.5 bg-[#c8ff00]/15 text-[#c8ff00] border border-[#c8ff00]/40 text-[10px] font-bold flex items-center gap-1.5 rounded-none">
+                <Database size={11} className="text-[#c8ff00]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#c8ff00] animate-pulse" />
                 SUPABASE LIVE API
               </span>
             )}
@@ -133,7 +134,7 @@ export function OperationsManagerDashboard({
           <h1 className="text-2xl font-bold text-white tracking-tight font-mono">
             Fleet Operations Overview
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-neutral-400 mt-1">
             Real-time urban vehicle tracking, network congestion intelligence, and quantum swarm route optimization.
           </p>
         </div>
@@ -141,7 +142,7 @@ export function OperationsManagerDashboard({
         <div className="flex items-center space-x-3 font-mono">
           <button
             onClick={() => onNavigate("route-optimization")}
-            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-2 shadow-lg"
+            className="px-4 py-2.5 bg-[#c8ff00] hover:bg-[#b5e600] text-black font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-2 shadow-lg shadow-[#c8ff00]/10"
           >
             <Zap size={15} />
             <span>START OPTIMIZATION</span>

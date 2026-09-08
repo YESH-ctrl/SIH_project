@@ -26,31 +26,32 @@ export function AnalystDashboard({ onNavigate }: AnalystDashboardProps) {
   return (
     <div className="space-y-6 font-sans">
       {/* Header Banner */}
-      <div className="p-5 bg-gradient-to-r from-[#0d131f] via-[#090e17] to-[#0d131f] border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 bg-[#0d0d0d] border border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c8ff00] via-emerald-400 to-amber-400" />
         <div>
-          <div className="flex items-center space-x-2 mb-1 font-mono text-xs text-purple-400 uppercase tracking-wider">
+          <div className="flex items-center space-x-2 mb-1 font-mono text-xs text-[#c8ff00] uppercase tracking-wider font-semibold">
             <BarChart3 size={14} />
             <span>OPERATIONAL ANALYTICS & ALGORITHM RESEARCH WORKSPACE</span>
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight font-mono">
             Transportation Intelligence & Benchmark Analysis
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-neutral-400 mt-1">
             Historical optimization evaluation, QPSO convergence metrics, and multi-algorithm benchmark comparisons.
           </p>
         </div>
 
         {/* Time Range & Export Actions */}
         <div className="flex items-center space-x-3 font-mono text-xs">
-          <div className="flex bg-slate-900 border border-slate-800 p-0.5">
+          <div className="flex bg-[#141414] border border-neutral-800 p-0.5">
             {(["Today", "7D", "30D"] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
                 className={`px-3 py-1 text-xs font-bold transition-all ${
                   timeRange === range
-                    ? "bg-purple-600 text-white"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-[#c8ff00] text-black"
+                    : "text-neutral-400 hover:text-white"
                 }`}
               >
                 {range}
@@ -60,13 +61,14 @@ export function AnalystDashboard({ onNavigate }: AnalystDashboardProps) {
 
           <button
             onClick={() => alert("Exporting Operational Analytics Report (PDF/CSV)...")}
-            className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase tracking-wider transition-all flex items-center space-x-1.5"
+            className="px-3.5 py-2 bg-[#c8ff00] hover:bg-[#b5e600] text-black font-bold uppercase tracking-wider transition-all flex items-center space-x-1.5 shadow-lg shadow-[#c8ff00]/10"
           >
             <Download size={14} />
             <span>EXPORT REPORT</span>
           </button>
         </div>
       </div>
+
 
       {/* Top Analytical KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 font-mono">

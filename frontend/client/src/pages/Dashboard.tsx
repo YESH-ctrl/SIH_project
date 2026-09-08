@@ -76,7 +76,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060708] text-white flex flex-col font-sans selection:bg-slate-700 selection:text-white">
+    <div className="min-h-screen bg-[#080808] text-[#f4f4f0] flex flex-col font-sans selection:bg-[#c8ff00] selection:text-black">
       {/* Top Header Bar */}
       <TopHeader
         currentTab={activeTab}
@@ -99,19 +99,21 @@ export default function Dashboard() {
         <AppSidebar activeTab={activeTab} onNavigate={handleNavigate} />
 
         {/* Main Content Area */}
-        <main className="flex-1 bg-[#060708] p-4 md:p-6 overflow-y-auto custom-scrollbar">
-          <div className="max-w-[1600px] mx-auto">
+        <main className="flex-1 bg-[#080808] p-4 md:p-6 overflow-y-auto custom-scrollbar">
+          <div className="max-w-[1600px] mx-auto space-y-6">
             {/* Role & Organization Banner for Transparency */}
-            <div className="mb-4 p-2 bg-[#0c0e12] border border-slate-800/80 flex items-center justify-between font-mono text-[11px]">
+            <div className="p-2.5 bg-[#0d0d0d] border border-neutral-800 flex items-center justify-between font-mono text-[11px] backdrop-blur">
               <div className="flex items-center space-x-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="text-slate-400">AUTHENTICATED ROLE:</span>
-                <span className="font-bold text-amber-400 uppercase">{role.replace(/_/g, " ")}</span>
-                <span className="text-slate-500">|</span>
-                <span className="text-slate-400">ORGANIZATION:</span>
+                <span className="w-2 h-2 rounded-full bg-[#c8ff00] animate-pulse" />
+                <span className="text-neutral-400">AUTHENTICATED ROLE:</span>
+                <span className="font-bold text-[#c8ff00] uppercase bg-[#c8ff00]/10 px-1.5 py-0.5 border border-[#c8ff00]/30">
+                  {role.replace(/_/g, " ")}
+                </span>
+                <span className="text-neutral-600">|</span>
+                <span className="text-neutral-400">ORGANIZATION:</span>
                 <span className="font-bold text-white">{organization?.name || "SIH 2026 Fleet Operations"}</span>
               </div>
-              <span className="text-slate-500 text-[10px]">SUPABASE RLS ENFORCED</span>
+              <span className="text-neutral-500 text-[10px] hidden sm:inline">SUPABASE RLS ACTIVE</span>
             </div>
 
             {/* Render Views */}
@@ -221,15 +223,17 @@ export default function Dashboard() {
 
 function UnauthorizedCard({ permission }: { permission: string }) {
   return (
-    <div className="p-8 bg-[#0d1015] border border-red-500/40 text-center font-mono space-y-3 max-w-xl mx-auto my-12">
-      <ShieldAlert size={36} className="text-red-400 mx-auto" />
+    <div className="p-8 bg-[#0d0d0d] border border-[#ff4d2d]/40 text-center font-mono space-y-3 max-w-xl mx-auto my-12 relative overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-[#ff4d2d]" />
+      <ShieldAlert size={36} className="text-[#ff4d2d] mx-auto" />
       <h2 className="text-lg font-bold text-white uppercase">UNAUTHORIZED ROLE ACTION</h2>
-      <p className="text-xs font-sans text-slate-400">
-        Your assigned role does not hold the required permission (<code className="text-amber-400">{permission}</code>) to view this module.
+      <p className="text-xs font-sans text-neutral-400">
+        Your assigned role does not hold the required permission (<code className="text-[#c8ff00] font-mono">{permission}</code>) to view this module.
       </p>
-      <div className="text-[10px] text-slate-500 pt-2 border-t border-slate-800">
+      <div className="text-[10px] text-neutral-500 pt-2 border-t border-neutral-800">
         Authorization is enforced via Supabase Row-Level Security & Role-Based Access Control.
       </div>
     </div>
   );
 }
+

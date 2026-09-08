@@ -190,34 +190,34 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
   return (
     <div className="space-y-6 font-sans select-none">
       {/* Header Glassmorphism Banner */}
-      <div className="p-6 bg-gradient-to-r from-[#0a0d14] via-[#0d121c] to-[#090b10] border border-slate-800/90 rounded-none shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
-        {/* Glow accent element */}
-        <div className="absolute top-0 right-0 w-96 h-full bg-emerald-500/5 blur-3xl pointer-events-none" />
+      <div className="p-6 bg-[#0d0d0d] border border-neutral-800 rounded-none shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
+        {/* Top Electric Lime Highlight Line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c8ff00] via-emerald-400 to-amber-400" />
 
-        <div className="relative z-10">
-          <div className="flex flex-wrap items-center gap-2 mb-1.5 font-mono text-xs uppercase tracking-wider">
-            <span className="flex items-center text-emerald-400 font-bold space-x-1.5">
+        <div className="relative z-10 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-wider">
+            <span className="flex items-center text-[#c8ff00] font-bold space-x-1.5">
               <ShieldCheck size={15} />
               <span>ORGANIZATION GOVERNANCE & CONTROL CENTER</span>
             </span>
             {isLive ? (
-              <span className="px-2.5 py-0.5 bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold rounded-full flex items-center gap-1.5 shadow-sm">
-                <Database size={11} className="text-emerald-400" />
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="px-2.5 py-0.5 bg-[#c8ff00]/15 border border-[#c8ff00]/40 text-[#c8ff00] text-[10px] font-bold rounded-none flex items-center gap-1.5 shadow-sm">
+                <Database size={11} className="text-[#c8ff00]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#c8ff00] animate-pulse" />
                 SUPABASE LIVE API
               </span>
             ) : (
-              <span className="px-2.5 py-0.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 text-[10px] font-bold rounded-full flex items-center gap-1.5">
+              <span className="px-2.5 py-0.5 bg-amber-500/15 border border-amber-500/40 text-amber-400 text-[10px] font-bold rounded-none flex items-center gap-1.5">
                 <Server size={11} />
                 CONNECTING BACKEND...
               </span>
             )}
           </div>
 
-          <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center font-mono">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center font-mono">
             {scenario?.organization?.name || data.organizationName}
           </h1>
-          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+          <p className="text-xs text-neutral-400 max-w-2xl">
             Real-time multi-agent fleet operations, quantum route optimization, row-level security governance, and capacity oversight.
           </p>
         </div>
@@ -226,34 +226,35 @@ export function OrgAdminDashboard({ onNavigate }: OrgAdminDashboardProps) {
           <button
             onClick={fetchBackendData}
             disabled={isRefreshing}
-            className="p-2.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-all shadow-md"
+            className="p-2.5 bg-[#141414] hover:bg-[#1f1f1f] border border-neutral-800 text-neutral-300 hover:text-white transition-all shadow-md"
             title="Refresh Live Data from Supabase"
           >
-            <RefreshCw size={14} className={isRefreshing ? "animate-spin text-emerald-400" : ""} />
+            <RefreshCw size={14} className={isRefreshing ? "animate-spin text-[#c8ff00]" : ""} />
           </button>
           <button
             onClick={() => onNavigate("users")}
-            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-2 shadow-lg shadow-emerald-500/10"
+            className="px-4 py-2.5 bg-[#c8ff00] hover:bg-[#b5e600] text-black font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-2 shadow-lg shadow-[#c8ff00]/10"
           >
             <UserPlus size={14} />
             <span>MANAGE USERS</span>
           </button>
           <button
             onClick={() => onNavigate("vehicles")}
-            className="px-4 py-2.5 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/40 text-sky-400 font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-2"
+            className="px-4 py-2.5 bg-[#c8ff00]/10 hover:bg-[#c8ff00]/20 border border-[#c8ff00]/40 text-[#c8ff00] font-bold text-xs uppercase tracking-wider transition-all flex items-center space-x-2"
           >
             <Truck size={14} />
             <span>MANAGE FLEET</span>
           </button>
           <button
             onClick={() => onNavigate("network-map")}
-            className="px-4 py-2.5 bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-white text-xs uppercase tracking-wider transition-all flex items-center space-x-2"
+            className="px-4 py-2.5 bg-[#141414] hover:bg-[#1f1f1f] border border-neutral-800 text-white text-xs uppercase tracking-wider transition-all flex items-center space-x-2"
           >
             <Settings size={14} />
             <span>CONFIG NETWORK</span>
           </button>
         </div>
       </div>
+
 
       {/* Dynamic 8 Executive KPI Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 font-mono">

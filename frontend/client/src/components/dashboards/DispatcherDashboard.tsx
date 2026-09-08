@@ -34,16 +34,17 @@ export function DispatcherDashboard({
   return (
     <div className="space-y-5 font-sans">
       {/* Dispatch Telemetry Header */}
-      <div className="p-4 bg-gradient-to-r from-[#0f141d] via-[#0a0d14] to-[#0f141d] border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 bg-[#0d0d0d] border border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c8ff00] via-emerald-400 to-amber-400" />
         <div>
-          <div className="flex items-center space-x-2 mb-1 font-mono text-xs text-purple-400 uppercase tracking-wider">
-            <Radio size={14} className="animate-pulse" />
+          <div className="flex items-center space-x-2 mb-1 font-mono text-xs text-[#c8ff00] uppercase tracking-wider font-semibold">
+            <Radio size={14} className="animate-pulse text-[#c8ff00]" />
             <span>DISPATCH OPERATIONS CONTROL ROOM</span>
           </div>
           <h1 className="text-xl font-bold text-white font-mono uppercase tracking-tight">
             Live Dispatch & Real-Time Rerouting
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5 font-sans">
+          <p className="text-xs text-neutral-400 mt-0.5 font-sans">
             Tactical fleet dispatching, instant rerouting execution, and live incident mitigation.
           </p>
         </div>
@@ -52,20 +53,21 @@ export function DispatcherDashboard({
         <div className="flex items-center space-x-2 font-mono text-xs">
           <button
             onClick={onTriggerIncidentDemo}
-            className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold uppercase tracking-wider transition-all flex items-center space-x-1.5 shadow-lg"
+            className="px-3.5 py-2 bg-[#c8ff00] hover:bg-[#b5e600] text-black font-bold uppercase tracking-wider transition-all flex items-center space-x-1.5 shadow-lg shadow-[#c8ff00]/10"
           >
             <RotateCcw size={14} />
             <span>REOPTIMIZE AFFECTED ROUTES</span>
           </button>
           <button
             onClick={() => onNavigate("reoptimization")}
-            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold uppercase tracking-wider transition-all flex items-center space-x-1.5"
+            className="px-3.5 py-2 bg-[#141414] hover:bg-[#1f1f1f] border border-neutral-800 text-white font-bold uppercase tracking-wider transition-all flex items-center space-x-1.5"
           >
-            <Navigation size={14} className="text-sky-400" />
+            <Navigation size={14} className="text-[#c8ff00]" />
             <span>REROUTE VEHICLE</span>
           </button>
         </div>
       </div>
+
 
       {/* Dispatch Tactical KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 font-mono">

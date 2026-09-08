@@ -87,22 +87,22 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-[#090b0e] border-r border-slate-800 flex flex-col justify-between selection:bg-slate-700 select-none z-20 font-sans">
+    <aside className="w-64 bg-[#080808] border-r border-neutral-800 flex flex-col justify-between selection:bg-[#c8ff00] selection:text-black select-none z-20 font-mono">
       {/* Brand Header */}
       <div>
-        <div className="p-4 border-b border-slate-800/80 flex items-center space-x-3 bg-[#0c0e12]">
-          <div className="w-8 h-8 rounded bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-mono font-bold text-sm">
-            Q
+        <div className="p-4 border-b border-neutral-800 flex items-center space-x-3 bg-[#0d0d0d]">
+          <div className="w-8 h-8 rounded-none bg-black border border-[#c8ff00]/40 flex items-center justify-center p-1">
+            <img src="/assets/qswarm-mark.webp" alt="QSWARM" className="w-full h-full object-contain" />
           </div>
           <div className="truncate">
-            <div className="font-mono font-bold text-base text-white tracking-tight flex items-center">
-              Q-FLOW
-              <span className="ml-1 text-[9px] px-1 py-0.2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded font-normal">
+            <div className="font-mono font-bold text-base text-white tracking-tight flex items-center space-x-1.5">
+              <span>QSWARM</span>
+              <span className="text-[9px] px-1 py-0.2 bg-[#c8ff00]/10 text-[#c8ff00] border border-[#c8ff00]/30 rounded-none font-semibold">
                 v2.4
               </span>
             </div>
-            <div className="text-[10px] text-slate-400 font-mono tracking-wide truncate">
-              {organization?.name || "Fleet Intelligence"}
+            <div className="text-[10px] text-neutral-400 font-mono tracking-wide truncate">
+              {organization?.name || "SIH 2026 Fleet System"}
             </div>
           </div>
         </div>
@@ -113,14 +113,14 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
             onClick={() => onNavigate("jury-demo")}
             className={`w-full py-2 px-3 flex items-center justify-between text-xs font-mono border transition-all ${
               activeTab === "jury-demo"
-                ? "bg-amber-500 text-black font-bold border-amber-400"
-                : "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border-amber-500/30"
+                ? "bg-[#c8ff00] text-black font-bold border-[#c8ff00] shadow-[0_0_12px_rgba(200,255,0,0.3)]"
+                : "bg-[#c8ff00]/10 text-[#c8ff00] hover:bg-[#c8ff00]/20 border-[#c8ff00]/30"
             }`}
           >
-            <span className="flex items-center">
+            <span className="flex items-center font-bold">
               <Sparkles size={13} className="mr-1.5" /> JURY DEMO MODE
             </span>
-            <span className="text-[9px] uppercase px-1 bg-amber-400/20 text-amber-300">8 STEPS</span>
+            <span className="text-[9px] uppercase px-1 bg-[#c8ff00]/20 text-black font-bold">8 STEPS</span>
           </button>
         </div>
 
@@ -135,7 +135,7 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
 
             return (
               <div key={section.title} className="space-y-1">
-                <div className="px-2 text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">
+                <div className="px-2 text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">
                   {section.title}
                 </div>
                 {allowedItems.map((item) => {
@@ -147,11 +147,11 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
                       onClick={() => onNavigate(item.id)}
                       className={`w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs font-mono rounded-none transition-colors text-left ${
                         isActive
-                          ? "bg-slate-800 text-sky-400 font-bold border-l-2 border-sky-400"
-                          : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                          ? "bg-[#111111] text-[#c8ff00] font-bold border-l-2 border-[#c8ff00]"
+                          : "text-neutral-400 hover:text-white hover:bg-white/5"
                       }`}
                     >
-                      <Icon size={14} className={isActive ? "text-sky-400" : "text-slate-500"} />
+                      <Icon size={14} className={isActive ? "text-[#c8ff00]" : "text-neutral-500"} />
                       <span className="truncate">{item.label}</span>
                     </button>
                   );
@@ -163,17 +163,17 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
       </div>
 
       {/* Footer User Info & Active Role Badge */}
-      <div className="p-3 border-t border-slate-800 bg-[#0c0e12] space-y-2">
+      <div className="p-3 border-t border-neutral-800 bg-[#0d0d0d] space-y-2">
         <div className="flex items-center justify-between text-xs font-mono">
           <div className="truncate">
             <div className="font-bold text-white truncate">{profile?.full_name || user?.email || "Operator"}</div>
-            <div className="text-[10px] text-amber-400 font-bold tracking-wider uppercase truncate">
+            <div className="text-[10px] text-[#c8ff00] font-bold tracking-wider uppercase truncate">
               {role.replace(/_/g, " ")}
             </div>
           </div>
           <button
             onClick={logout}
-            className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-1.5 text-neutral-400 hover:text-[#ff4d2d] transition-colors"
             title="Sign Out"
           >
             <LogOut size={14} />
@@ -183,3 +183,4 @@ export function AppSidebar({ activeTab, onNavigate }: SidebarProps) {
     </aside>
   );
 }
+
