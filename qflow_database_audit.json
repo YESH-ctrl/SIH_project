@@ -1,0 +1,178 @@
+{
+  "audit_timestamp": "2026-09-08T17:11:30Z",
+  "database_type": "PostgreSQL / Supabase",
+  "supabase_url": "https://oiehjulozbktlapmctsr.supabase.co",
+  "schema_file": "backend/supabase_schema.sql",
+  "tables": [
+    {
+      "name": "organizations",
+      "primary_key": "id (UUID)",
+      "foreign_keys": [],
+      "columns": ["id", "name", "logo_url", "created_at", "updated_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Organizations"]
+    },
+    {
+      "name": "profiles",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["auth_user_id -> auth.users(id)", "organization_id -> public.organizations(id)"],
+      "columns": ["id", "auth_user_id", "full_name", "email", "organization_id", "role", "avatar_url", "is_active", "created_at", "updated_at"],
+      "rls_enabled": true,
+      "policies": ["View organization profiles", "Update own profile"]
+    },
+    {
+      "name": "customers",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)"],
+      "columns": ["id", "organization_id", "customer_code", "name", "demand_kg", "time_window", "priority", "lat", "lng", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Customers"]
+    },
+    {
+      "name": "delivery_points",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)", "customer_id -> public.customers(id)"],
+      "columns": ["id", "organization_id", "customer_id", "point_code", "name", "demand_kg", "time_window_start", "time_window_end", "service_time_seconds", "priority", "status", "lat", "lng", "address", "notes", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Delivery Points"]
+    },
+    {
+      "name": "depots",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)"],
+      "columns": ["id", "organization_id", "depot_code", "name", "capacity_vehicles", "lat", "lng", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Depots"]
+    },
+    {
+      "name": "vehicles",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)"],
+      "columns": ["id", "organization_id", "vehicle_code", "name", "type", "capacity_kg", "current_load_kg", "status", "current_location", "next_stop", "eta", "route_id", "lat", "lng", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Vehicles"]
+    },
+    {
+      "name": "networks",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)"],
+      "columns": ["id", "organization_id", "name", "city_region", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Networks"],
+      "notes": "Preserved legacy table"
+    },
+    {
+      "name": "road_networks",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)"],
+      "columns": ["id", "organization_id", "name", "source", "version", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Road Networks"],
+      "notes": "Canonical road network table"
+    },
+    {
+      "name": "network_nodes",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["network_id -> public.road_networks(id) ON DELETE CASCADE"],
+      "columns": ["id", "network_id", "external_id", "lat", "lng", "created_at"],
+      "rls_enabled": false,
+      "indexes": ["idx_network_nodes_network_id"]
+    },
+    {
+      "name": "network_edges",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["network_id -> public.road_networks(id) ON DELETE CASCADE", "from_node_id -> public.network_nodes(id)", "to_node_id -> public.network_nodes(id)"],
+      "columns": ["id", "network_id", "external_id", "from_node_id", "to_node_id", "road_name", "length_meters", "speed_limit_kph", "road_type", "capacity_vehicles", "geometry", "created_at"],
+      "rls_enabled": false,
+      "indexes": ["idx_network_edges_network_id", "idx_network_edges_from_node_id", "idx_network_edges_to_node_id"]
+    },
+    {
+      "name": "traffic_states",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)", "edge_id -> public.network_edges(id)"],
+      "columns": ["id", "organization_id", "edge_id", "road_segment_code", "road_name", "current_speed_kmh", "free_flow_speed_kmh", "congestion_percent", "congestion_level", "travel_time_seconds", "vehicle_count", "capacity", "source", "timestamp", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Traffic States"]
+    },
+    {
+      "name": "restrictions",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)", "edge_id -> public.network_edges(id)"],
+      "columns": ["id", "organization_id", "restriction_code", "name", "description", "restriction_type", "affected_road", "edge_id", "vehicle_type", "start_time", "end_time", "days_of_week", "max_weight_kg", "max_height_m", "active_time_window", "is_active", "status", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Restrictions"]
+    },
+    {
+      "name": "routes",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)", "vehicle_id -> public.vehicles(id)", "depot_id -> public.depots(id)", "optimization_run_id -> public.optimization_runs(id)"],
+      "columns": ["id", "organization_id", "route_code", "vehicle_id", "depot_id", "optimization_run_id", "status", "distance_km", "estimated_duration_min", "actual_duration_min", "delay_min", "geometry_geojson", "route_date", "start_time", "started_at", "completed_at", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Routes"]
+    },
+    {
+      "name": "route_stops",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)", "route_id -> public.routes(id) ON DELETE CASCADE", "delivery_point_id -> public.delivery_points(id)"],
+      "columns": ["id", "organization_id", "route_id", "delivery_point_id", "sequence_number", "eta", "actual_arrival_time", "arrival_time", "departure_time", "estimated_arrival_time", "estimated_departure_time", "service_duration_seconds", "distance_from_previous_meters", "travel_time_from_previous_seconds", "delay_seconds", "status", "created_at"],
+      "unique_constraints": ["uq_route_sequence (route_id, sequence_number)"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Route Stops"]
+    },
+    {
+      "name": "incidents",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)"],
+      "columns": ["id", "organization_id", "incident_code", "title", "road_name", "type", "severity", "affected_vehicles_count", "affected_routes_count", "status", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Incidents"]
+    },
+    {
+      "name": "optimization_runs",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)"],
+      "columns": ["id", "organization_id", "run_code", "algorithm", "vehicles_count", "customers_count", "fitness_score", "runtime_sec", "travel_time_saved_percent", "status", "parameters", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Optimization Runs"]
+    },
+    {
+      "name": "optimization_results",
+      "primary_key": "id (UUID)",
+      "foreign_keys": ["organization_id -> public.organizations(id)", "optimization_run_id -> public.optimization_runs(id) ON DELETE CASCADE", "vehicle_id -> public.vehicles(id)", "route_id -> public.routes(id)"],
+      "columns": ["id", "organization_id", "optimization_run_id", "vehicle_id", "route_id", "total_distance_km", "total_travel_time_min", "congestion_avoided_percent", "fitness_value", "result_details", "created_at"],
+      "rls_enabled": true,
+      "policies": ["Org Isolation Optimization Results"]
+    }
+  ],
+  "repositories": [
+    "app.infrastructure.database.repositories.dashboard_repository",
+    "app.infrastructure.database.repositories.delivery_repository",
+    "app.infrastructure.database.repositories.restriction_repository",
+    "app.infrastructure.database.repositories.route_repository",
+    "app.infrastructure.database.repositories.traffic_repository",
+    "app.network.network_repository"
+  ],
+  "api_endpoints": [
+    "GET /api/v1/dashboards/stats",
+    "GET /api/v1/delivery-points",
+    "GET /api/v1/networks/raipur/graph",
+    "GET /api/v1/optimization/demo-dataset",
+    "POST /api/v1/optimization/qpso/solve",
+    "GET /api/v1/restrictions",
+    "GET /api/v1/routes",
+    "GET /api/v1/traffic/live-feed"
+  ],
+  "seed_data_summary": {
+    "organization": "SIH 2026 Fleet Operations (00000000-0000-0000-0000-000000000001)",
+    "scenario_id": "QFLOW_JURY_DEMO_01",
+    "depot": "Central Rajpur Depot / Raipur Main Distribution Depot",
+    "vehicles": 3,
+    "customers": 10,
+    "delivery_points": 10,
+    "total_fleet_capacity": 160,
+    "total_delivery_demand": 139,
+    "baseline_routes": 3,
+    "route_stops": 10,
+    "incidents": 1
+  }
+}
