@@ -7,6 +7,9 @@ import { useLiveFleet } from "@/hooks/useLiveFleet";
 import { liveStore } from "@/services/liveStore";
 import { AlertTriangle, RefreshCw, ShieldAlert, CheckCircle2, Plus, Loader2 } from "lucide-react";
 import { DataModeBadge } from "./LiveModeBadge";
+import { getApiBaseUrl } from "@/const";
+
+const API_BASE_URL = getApiBaseUrl();
 
 const STATUS_COLORS: Record<string, string> = {
   DETECTED: "bg-amber-500/10 text-amber-400 border-amber-500/30",
@@ -61,7 +64,7 @@ export function TrafficEventsPage({ onTriggerReoptimization }: { onTriggerReopti
   const resolveIncident = async (id: string) => {
     try {
       await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || "/api/v1"}/incidents/${encodeURIComponent(id)}/resolve`,
+        `${API_BASE_URL}/incidents/${encodeURIComponent(id)}/resolve`,
         { method: "POST" }
       );
     } catch {
