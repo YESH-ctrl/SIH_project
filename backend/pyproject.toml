@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "qflow-backend"
 version = "2.4.0"
 description = "Q-FLOW Intelligent Transportation & Route Optimization Control Center Backend"
-readme = "README.md"
 requires-python = ">=3.12"
 authors = [
     { name = "Q-FLOW Engineering Team", email = "engineering@qswarm.io" }
@@ -26,6 +25,10 @@ dependencies = [
     "pandas>=2.2.1",
     "redis>=5.0.3",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*", "api*"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
