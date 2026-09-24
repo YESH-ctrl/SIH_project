@@ -27,8 +27,8 @@ app = FastAPI(
 # Configure CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origins=settings.CORS_ORIGINS + ["*"],
+    allow_origin_regex=r"^https?://.*$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,7 +63,8 @@ async def on_shutdown():
     await pipeline_orchestrator.stop_workers()
 
 
-# Health Check Endpoints (Section 21: /api/health + /api/v1/system/status)
+# Root Welcome & Health Check Endpoints
+@app.get("/", tags=["Health"])
 @app.get("/health", tags=["Health"])
 @app.get("/health/live", tags=["Health"])
 @app.get("/health/ready", tags=["Health"])
@@ -75,6 +76,8 @@ async def health_check():
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "data_mode": settings.DATA_MODE.upper(),
+        "docs": "/docs",
+        "api_v1": "/api/v1",
     }
 
 
