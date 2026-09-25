@@ -71,7 +71,11 @@ async def on_shutdown():
 
 
 
-# Health Check Endpoints (Section 21: /api/health + /api/v1/system/status)
+# Health & Root Status Endpoints (Section 21: / + /health + /api/health + /api/v1)
+@app.get("/", tags=["Health"])
+@app.get("/api", tags=["Health"])
+@app.get("/api/v1", tags=["Health"])
+@app.get("/api/v1/", tags=["Health"])
 @app.get("/health", tags=["Health"])
 @app.get("/health/live", tags=["Health"])
 @app.get("/health/ready", tags=["Health"])
@@ -83,7 +87,11 @@ async def health_check():
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "data_mode": settings.DATA_MODE.upper(),
+        "docs_url": "/docs",
+        "api_v1_base": "/api/v1",
+        "frontend_url": "https://sih-project-ten-red.vercel.app",
     }
+
 
 
 # Include API v1 Router

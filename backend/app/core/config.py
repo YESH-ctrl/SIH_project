@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     DATA_MODE: str = Field(default="live")
 
     CORS_ORIGINS: List[str] = [
+        "https://sih-project-ten-red.vercel.app",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",
@@ -32,6 +33,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
     ]
+
 
     # Supabase Configuration
     SUPABASE_URL: str = Field(default="")
