@@ -80,20 +80,18 @@ async def get_current_user(
 
     # 2. Extract Authorization Bearer token
     if not authorization or not authorization.startswith("Bearer "):
-        # Fallback to default Operations Manager for unauthenticated local development calls if configured
-        if settings.ENVIRONMENT == "development":
-            demo_data = DEMO_USER_PROFILES["ops@qswarm.io"]
-            user_role = demo_data["role"]
-            from app.core.permissions import ROLE_PERMISSIONS
-            perms = [p.value for p in ROLE_PERMISSIONS.get(user_role, set())]
-            return CurrentUser(
-                user_id=demo_data["user_id"],
-                email=demo_data["email"],
-                organization_id=demo_data["organization_id"],
-                role=user_role,
-                permissions=perms,
-            )
-        raise UnauthorizedError("Missing or invalid Authorization header.")
+        # Fallback to default Operations Manager for unauthenticated demo & platform calls
+        demo_data = DEMO_USER_PROFILES["ops@qswarm.io"]
+        user_role = demo_data["role"]
+        from app.core.permissions import ROLE_PERMISSIONS
+        perms = [p.value for p in ROLE_PERMISSIONS.get(user_role, set())]
+        return CurrentUser(
+            user_id=demo_data["user_id"],
+            email=demo_data["email"],
+            organization_id=demo_data["organization_id"],
+            role=user_role,
+            permissions=perms,
+        )
 
     token = authorization.split(" ")[1]
 

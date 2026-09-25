@@ -152,12 +152,22 @@ class LiveStoreImpl {
     this.statusListeners.forEach((fn) => fn(s));
   }
 
+  // Helper for REST calls with demo headers
+  private async apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+    const demoEmail = localStorage.getItem("qswarm_demo_user_email") || "ops@qswarm.io";
+    const headers = {
+      "X-Demo-User": demoEmail,
+      ...(init.headers || {}),
+    };
+    return fetch(url, { ...init, headers });
+  }
+
   // ------------------------------------------------------------ REST snapshot
   async refresh(): Promise<LiveSnapshot> {
     const [vehiclesRes, trafficRes, incidentsRes] = await Promise.all([
-      fetch(`${API_BASE_URL}/vehicles`),
-      fetch(`${API_BASE_URL}/traffic/edges?limit=2000`),
-      fetch(`${API_BASE_URL}/incidents`),
+      this.apiFetch(`${API_BASE_URL}/vehicles`),
+      this.apiFetch(`${API_BASE_URL}/traffic/edges?limit=2000`),
+      this.apiFetch(`${API_BASE_URL}/incidents`),
     ]);
     if (!vehiclesRes.ok) throw new Error(`Vehicles API ${vehiclesRes.status}`);
     const vehiclesJson = await vehiclesRes.json();
@@ -180,19 +190,19 @@ class LiveStoreImpl {
   }
 
   async fetchVehicleDetail(vehicleId: string): Promise<Record<string, unknown>> {
-    const res = await fetch(`${API_BASE_URL}/vehicles/${encodeURIComponent(vehicleId)}`);
+    const res = await this.apiFetch(`${API_BASE_URL}/vehicles/${encodeURIComponent(vehicleId)}`);
     if (!res.ok) throw new Error(`Vehicle detail ${res.status}`);
     return res.json();
   }
 
   async fetchSystemStatus(): Promise<Record<string, any>> {
-    const res = await fetch(`${API_BASE_URL}/system/status`);
+    const res = await this.apiFetch(`${API_BASE_URL}/system/status`);
     if (!res.ok) throw new Error(`System status ${res.status}`);
     return res.json();
   }
 
   async setDestination(vehicleId: string, lat: number, lng: number, name = ""): Promise<Record<string, unknown>> {
-    const res = await fetch(`${API_BASE_URL}/vehicles/${encodeURIComponent(vehicleId)}/destination`, {
+    const res = await this.apiFetch(`${API_BASE_URL}/vehicles/${encodeURIComponent(vehicleId)}/destination`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ latitude: lat, longitude: lng, name }),
@@ -204,7 +214,7 @@ class LiveStoreImpl {
   async createIncident(payload: {
     type: string; severity: string; latitude: number; longitude: number; title?: string;
   }): Promise<Record<string, unknown>> {
-    const res = await fetch(`${API_BASE_URL}/incidents`, {
+    const res = await this.apiFetch(`${API_BASE_URL}/incidents`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
