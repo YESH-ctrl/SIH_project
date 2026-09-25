@@ -2,8 +2,9 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/app/main.py"
+      "destination": "/main.py"
     }
   ]
 }
+
 

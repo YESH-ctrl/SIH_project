@@ -33,5 +33,6 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.vercel]
-entrypoint = "app/main.py"
+entrypoint = "main.py"
+
 
