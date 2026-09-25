@@ -3,10 +3,9 @@
 // Replaces direct QFlowDataStore fake-data dependencies for LIVE operations.
 // Every record carries provenance (mode/source) so the UI can never present
 // SIMULATION data as LIVE data.
-// ─────────────────────────────────────────────────────────────────────────────
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sih-project-s2d1.vercel.app/api/v1";
+const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || "wss://sih-project-s2d1.vercel.app";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
-const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || "";
 
 export type DataMode = "LIVE" | "SIMULATION" | "TEST" | "UNKNOWN";
 export type TrackingStatus = "LIVE" | "DEGRADED" | "STALE" | "OFFLINE";
