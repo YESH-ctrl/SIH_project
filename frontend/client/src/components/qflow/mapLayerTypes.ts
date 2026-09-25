@@ -24,8 +24,8 @@ export type LayerVisibilityState = Record<MapLayerKey, boolean>;
 
 export const DEFAULT_LAYER_VISIBILITY: LayerVisibilityState = {
   basemap: true,
-  roadNetwork: true,
-  nodes: true,
+  roadNetwork: false,
+  nodes: false,
   traffic: true,
   route: true,
   baselineRoutes: true,
