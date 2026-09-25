@@ -55,12 +55,19 @@ async def on_startup():
     # Warn loudly if a live deployment lacks the telemetry shared secret.
     if settings.ENVIRONMENT == "production" and not settings.GPS_AUTH_SECRET:
         logger.warning("GPS_AUTH_SECRET is not set — telemetry endpoint is unauthenticated!")
-    await pipeline_orchestrator.start_workers()
+    
+    import os
+    if not os.getenv("VERCEL") and not os.getenv("VERCEL_ENV"):
+        await pipeline_orchestrator.start_workers()
+    else:
+        logger.info("Serverless environment detected (Vercel) — background worker loops disabled.")
 
 
 @app.on_event("shutdown")
 async def on_shutdown():
-    await pipeline_orchestrator.stop_workers()
+    import os
+    if not os.getenv("VERCEL") and not os.getenv("VERCEL_ENV"):
+        await pipeline_orchestrator.stop_workers()
 
 
 # Root Welcome & Health Check Endpoints

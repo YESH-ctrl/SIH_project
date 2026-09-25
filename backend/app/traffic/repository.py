@@ -13,7 +13,8 @@ from app.traffic.engine import EdgeTrafficState
 class TrafficEdgeStateRepository:
     async def upsert_states(self, states: List[EdgeTrafficState]) -> int:
         count = 0
-        async with AsyncSessionLocal() as db:
+        try:
+            async with AsyncSessionLocal() as db:
             try:
                 for s in states:
                     try:
@@ -52,6 +53,8 @@ class TrafficEdgeStateRepository:
             except Exception as exc:
                 await db.rollback()
                 logger.warning("TrafficEdgeState upsert failed: %s", exc)
+        except Exception as exc:
+            logger.warning("Database connection unavailable for traffic states: %s", exc)
         return count
 
     async def _resolve_edge_uuid(self, db, edge_id_str: str) -> Optional[uuid.UUID]:
