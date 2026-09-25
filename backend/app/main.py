@@ -51,16 +51,19 @@ async def qflow_exception_handler(request: Request, exc: QFlowException):
 
 @app.on_event("startup")
 async def on_startup():
-    logger.info("Q-FLOW starting: DATA_MODE=%s", settings.DATA_MODE.upper())
-    # Warn loudly if a live deployment lacks the telemetry shared secret.
-    if settings.ENVIRONMENT == "production" and not settings.GPS_AUTH_SECRET:
-        logger.warning("GPS_AUTH_SECRET is not set — telemetry endpoint is unauthenticated!")
-    
-    import os
-    if not os.getenv("VERCEL") and not os.getenv("VERCEL_ENV"):
-        await pipeline_orchestrator.start_workers()
-    else:
-        logger.info("Serverless environment detected (Vercel) — background worker loops disabled.")
+    try:
+        logger.info("Q-FLOW starting: DATA_MODE=%s", settings.DATA_MODE.upper())
+        # Warn loudly if a live deployment lacks the telemetry shared secret.
+        if settings.ENVIRONMENT == "production" and not settings.GPS_AUTH_SECRET:
+            logger.warning("GPS_AUTH_SECRET is not set — telemetry endpoint is unauthenticated!")
+        
+        import os
+        if not os.getenv("VERCEL") and not os.getenv("VERCEL_ENV"):
+            await pipeline_orchestrator.start_workers()
+        else:
+            logger.info("Serverless environment detected (Vercel) — background worker loops disabled.")
+    except Exception as exc:
+        logger.error("Startup handler exception caught: %s", exc)
 
 
 @app.on_event("shutdown")

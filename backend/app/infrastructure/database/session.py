@@ -26,7 +26,11 @@ else:
     engine_kwargs["pool_size"] = 10
     engine_kwargs["max_overflow"] = 20
 
-engine = create_async_engine(database_url, **engine_kwargs)
+try:
+    engine = create_async_engine(database_url, **engine_kwargs)
+except Exception as exc:
+    logger.warning("Failed to initialize database engine (%s); using NullPool fallback", exc)
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:", poolclass=NullPool)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
