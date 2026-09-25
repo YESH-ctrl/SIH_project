@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd frontend && pnpm build",
+  "outputDirectory": "frontend/dist/public",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
