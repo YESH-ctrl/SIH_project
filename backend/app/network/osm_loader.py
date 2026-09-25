@@ -28,8 +28,13 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 def load_raipur_from_json() -> Optional[nx.DiGraph]:
     """Load Raipur authentic OSM road network from raipur-osm.json."""
     candidates = [
+        Path(__file__).resolve().parent / "raipur-osm.json",
+        Path(__file__).resolve().parent.parent / "raipur-osm.json",
+        Path(__file__).resolve().parent.parent.parent / "raipur-osm.json",
         Path(__file__).resolve().parent.parent.parent.parent / "frontend" / "raipur-osm.json",
         Path(__file__).resolve().parent.parent.parent / "frontend" / "raipur-osm.json",
+        Path("raipur-osm.json"),
+        Path("backend/raipur-osm.json"),
         Path("frontend/raipur-osm.json"),
         Path("../frontend/raipur-osm.json"),
     ]
