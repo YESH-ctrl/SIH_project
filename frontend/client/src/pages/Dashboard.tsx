@@ -25,7 +25,7 @@ import { ShieldAlert } from "lucide-react";
 export default function Dashboard() {
   const { role, profile, organization, hasPermission } = useAuth();
   
-  // Set default initial view to Jury Demo Mode with 8-Step Workflow
+  // Set default initial view based on Role-Aware Dashboard specification
   const getDefaultTabForRole = (): string => {
     return "jury-demo";
   };
