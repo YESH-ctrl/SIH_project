@@ -5,9 +5,9 @@ import React, { useEffect, useState } from "react";
 import { useLiveFleet } from "@/hooks/useLiveFleet";
 import { LiveOperationsMap } from "./LiveOperationsMap";
 import { DataModeBadge } from "./LiveModeBadge";
-import { getApiBaseUrl } from "@/const";
+import { RefreshCw, ArrowRight, Route, Timer, TrendingDown } from "lucide-react";
 
-const API_BASE_URL = getApiBaseUrl();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 interface RerouteLogRow {
   id: string;

@@ -27,8 +27,8 @@ app = FastAPI(
 # Configure CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS + ["*"],
-    allow_origin_regex=r"^https?://.*$",
+    allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,30 +51,19 @@ async def qflow_exception_handler(request: Request, exc: QFlowException):
 
 @app.on_event("startup")
 async def on_startup():
-    try:
-        logger.info("Q-FLOW starting: DATA_MODE=%s", settings.DATA_MODE.upper())
-        # Warn loudly if a live deployment lacks the telemetry shared secret.
-        if settings.ENVIRONMENT == "production" and not settings.GPS_AUTH_SECRET:
-            logger.warning("GPS_AUTH_SECRET is not set — telemetry endpoint is unauthenticated!")
-        
-        import os
-        if not os.getenv("VERCEL") and not os.getenv("VERCEL_ENV"):
-            await pipeline_orchestrator.start_workers()
-        else:
-            logger.info("Serverless environment detected (Vercel) — background worker loops disabled.")
-    except Exception as exc:
-        logger.error("Startup handler exception caught: %s", exc)
+    logger.info("Q-FLOW starting: DATA_MODE=%s", settings.DATA_MODE.upper())
+    # Warn loudly if a live deployment lacks the telemetry shared secret.
+    if settings.ENVIRONMENT == "production" and not settings.GPS_AUTH_SECRET:
+        logger.warning("GPS_AUTH_SECRET is not set — telemetry endpoint is unauthenticated!")
+    await pipeline_orchestrator.start_workers()
 
 
 @app.on_event("shutdown")
 async def on_shutdown():
-    import os
-    if not os.getenv("VERCEL") and not os.getenv("VERCEL_ENV"):
-        await pipeline_orchestrator.stop_workers()
+    await pipeline_orchestrator.stop_workers()
 
 
-# Root Welcome & Health Check Endpoints
-@app.get("/", tags=["Health"])
+# Health Check Endpoints (Section 21: /api/health + /api/v1/system/status)
 @app.get("/health", tags=["Health"])
 @app.get("/health/live", tags=["Health"])
 @app.get("/health/ready", tags=["Health"])
@@ -86,8 +75,6 @@ async def health_check():
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "data_mode": settings.DATA_MODE.upper(),
-        "docs": "/docs",
-        "api_v1": "/api/v1",
     }
 
 

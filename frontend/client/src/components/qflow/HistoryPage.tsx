@@ -1,9 +1,8 @@
 // ─── Optimization Run History — from the backend database ────────────────────
 import React, { useEffect, useState } from "react";
 import { History, CheckCircle2, Loader2 } from "lucide-react";
-import { getApiBaseUrl } from "@/const";
 
-const API_BASE_URL = getApiBaseUrl();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 interface RunRow {
   optimization_id: string;

@@ -32,40 +32,19 @@ def _status_for_vehicle(v) -> str:
 
 
 def _in_memory_vehicles(status: Optional[str], limit: int) -> list:
-    """Live in-memory vehicles from the ingestion pipeline."""
-    if not telemetry_service._last_fix:
-        try:
-            from app.optimization.demo_data import get_raipur_demo_dataset
-            depot, dps, vehs = get_raipur_demo_dataset()
-            now_dt = datetime.now(timezone.utc)
-            for idx, v in enumerate(vehs):
-                code = v.id
-                v_lat = depot.latitude + (0.005 * (idx + 1))
-                v_lng = depot.longitude + (0.008 * (idx + 1))
-                telemetry_service._last_fix[code] = {
-                    "ts": now_dt,
-                    "lat": v_lat,
-                    "lng": v_lng,
-                    "speed_kmh": 35.0 + (idx * 5),
-                    "name": v.name,
-                }
-        except Exception as exc:
-            logger.warning("Failed to initialize default live telemetry fixes: %s", exc)
-
+    """Live in-memory vehicles from the ingestion pipeline (real GPS fixes
+    received since process start). Used when the database is unreachable so
+    the fleet map keeps showing REAL telemetry — clearly flagged as such;
+    never padded with fake vehicles."""
     out = []
     for code, fix in telemetry_service._last_fix.items():
-        # Keep ts fresh if serving live in-memory telemetry
         age = time.time() - fix["ts"].timestamp()
-        if age > 10.0:
-            fix["ts"] = datetime.now(timezone.utc)
-            age = 0.0
-
         tracking = telemetry_service.tracking_status_for_age(age).value
         if status and tracking != status:
             continue
         out.append({
             "vehicle_id": code,
-            "name": fix.get("name") or f"Tracker {code}",
+            "name": f"Tracker {code}",
             "type": "Van",
             "status": "Active",
             "tracking_status": tracking,

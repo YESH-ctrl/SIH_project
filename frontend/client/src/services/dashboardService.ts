@@ -1,4 +1,5 @@
 // Q-FLOW Role-Specific Dashboard Data Service Abstraction Layer
+import { dashboardApi } from "./apiClient";
 
 export interface AdminDashboardData {
   organizationName: string;
@@ -62,7 +63,7 @@ export interface AnalystDashboardData {
 }
 
 // -----------------------------------------------------------------------------
-// Provider Functions (Initially returning realistic demonstration data)
+// Default Provider Functions (Realistic fallback & demonstration data)
 // -----------------------------------------------------------------------------
 
 export function getAdminDashboardData(): AdminDashboardData {
@@ -234,3 +235,105 @@ export function getAnalystDashboardData(): AnalystDashboardData {
     ],
   };
 }
+
+// -----------------------------------------------------------------------------
+// Production Async API Fetchers with Automatic Fallback
+// -----------------------------------------------------------------------------
+
+export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
+  const fallback = getAdminDashboardData();
+  try {
+    const raw = await dashboardApi.getAdminDashboard();
+    if (!raw) return fallback;
+    return {
+      organizationName: raw.organization_name ?? raw.organizationName ?? fallback.organizationName,
+      totalVehicles: raw.total_vehicles ?? raw.totalVehicles ?? fallback.totalVehicles,
+      activeVehicles: raw.active_vehicles ?? raw.activeVehicles ?? fallback.activeVehicles,
+      totalDeliveryPoints: raw.total_delivery_points ?? raw.totalDeliveryPoints ?? fallback.totalDeliveryPoints,
+      activeRoutes: raw.active_routes ?? raw.activeRoutes ?? fallback.activeRoutes,
+      avgUtilization: raw.avg_utilization ?? raw.avgUtilization ?? fallback.avgUtilization,
+      networkCongestion: raw.network_congestion ?? raw.networkCongestion ?? fallback.networkCongestion,
+      completedDeliveriesToday: raw.completed_deliveries_today ?? raw.completedDeliveriesToday ?? fallback.completedDeliveriesToday,
+      systemHealthPercent: raw.system_health_percent ?? raw.systemHealthPercent ?? fallback.systemHealthPercent,
+      roleDistribution: raw.role_distribution ?? raw.roleDistribution ?? fallback.roleDistribution,
+      fleetHealth: raw.fleet_health ?? raw.fleetHealth ?? fallback.fleetHealth,
+      operationsSummary: raw.operations_summary ?? raw.operationsSummary ?? fallback.operationsSummary,
+      networkHealth: raw.network_health ?? raw.networkHealth ?? fallback.networkHealth,
+      usersOverview: raw.users_overview ?? raw.usersOverview ?? fallback.usersOverview,
+      recentActivity: raw.recent_activity ?? raw.recentActivity ?? fallback.recentActivity,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+export async function fetchOperationsDashboardData(): Promise<OperationsDashboardData> {
+  const fallback = getOperationsDashboardData();
+  try {
+    const raw = await dashboardApi.getOperationsDashboard();
+    if (!raw) return fallback;
+    return {
+      activeVehicles: raw.active_vehicles ?? raw.activeVehicles ?? fallback.activeVehicles,
+      activeRoutes: raw.active_routes ?? raw.activeRoutes ?? fallback.activeRoutes,
+      deliveryStops: raw.delivery_stops ?? raw.deliveryStops ?? fallback.deliveryStops,
+      networkCongestion: raw.network_congestion ?? raw.networkCongestion ?? fallback.networkCongestion,
+      avgSpeedKmh: raw.avg_speed_kmh ?? raw.avgSpeedKmh ?? fallback.avgSpeedKmh,
+      onTimeDeliveryPercent: raw.on_time_delivery_percent ?? raw.onTimeDeliveryPercent ?? fallback.onTimeDeliveryPercent,
+      delayedRoutesCount: raw.delayed_routes_count ?? raw.delayedRoutesCount ?? fallback.delayedRoutesCount,
+      optimizationStatus: raw.optimization_status ?? raw.optimizationStatus ?? fallback.optimizationStatus,
+      operationalHealth: raw.operational_health ?? raw.operationalHealth ?? fallback.operationalHealth,
+      latestIncident: raw.latest_incident ?? raw.latestIncident ?? fallback.latestIncident,
+      currentOptimization: raw.current_optimization ?? raw.currentOptimization ?? fallback.currentOptimization,
+      priorityActions: raw.priority_actions ?? raw.priorityActions ?? fallback.priorityActions,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+export async function fetchDispatcherDashboardData(): Promise<DispatcherDashboardData> {
+  const fallback = getDispatcherDashboardData();
+  try {
+    const raw = await dashboardApi.getDispatcherDashboard();
+    if (!raw) return fallback;
+    return {
+      vehiclesOnline: raw.vehicles_online ?? raw.vehiclesOnline ?? fallback.vehiclesOnline,
+      vehiclesMoving: raw.vehicles_moving ?? raw.vehiclesMoving ?? fallback.vehiclesMoving,
+      vehiclesIdle: raw.vehicles_idle ?? raw.vehiclesIdle ?? fallback.vehiclesIdle,
+      activeRoutes: raw.active_routes ?? raw.activeRoutes ?? fallback.activeRoutes,
+      delayedRoutes: raw.delayed_routes ?? raw.delayedRoutes ?? fallback.delayedRoutes,
+      criticalIncidentsCount: raw.critical_incidents_count ?? raw.criticalIncidentsCount ?? fallback.criticalIncidentsCount,
+      criticalIncidents: raw.critical_incidents ?? raw.criticalIncidents ?? fallback.criticalIncidents,
+      activeRoutesList: raw.active_routes_list ?? raw.activeRoutesList ?? fallback.activeRoutesList,
+      deliveryExceptions: raw.delivery_exceptions ?? raw.deliveryExceptions ?? fallback.deliveryExceptions,
+      realtimeActivityFeed: raw.realtime_activity_feed ?? raw.realtimeActivityFeed ?? fallback.realtimeActivityFeed,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+export async function fetchAnalystDashboardData(): Promise<AnalystDashboardData> {
+  const fallback = getAnalystDashboardData();
+  try {
+    const raw = await dashboardApi.getAnalystDashboard();
+    if (!raw) return fallback;
+    return {
+      avgTravelTimeMin: raw.avg_travel_time_min ?? raw.avgTravelTimeMin ?? fallback.avgTravelTimeMin,
+      avgRouteDistanceKm: raw.avg_route_distance_km ?? raw.avgRouteDistanceKm ?? fallback.avgRouteDistanceKm,
+      onTimeDeliveryPercent: raw.on_time_delivery_percent ?? raw.onTimeDeliveryPercent ?? fallback.onTimeDeliveryPercent,
+      avgNetworkCongestionPercent: raw.avg_network_congestion_percent ?? raw.avgNetworkCongestionPercent ?? fallback.avgNetworkCongestionPercent,
+      fleetUtilizationPercent: raw.fleet_utilization_percent ?? raw.fleetUtilizationPercent ?? fallback.fleetUtilizationPercent,
+      optimizationImprovementPercent: raw.optimization_improvement_percent ?? raw.optimizationImprovementPercent ?? fallback.optimizationImprovementPercent,
+      avgOptimizationTimeSec: raw.avg_optimization_time_sec ?? raw.avgOptimizationTimeSec ?? fallback.avgOptimizationTimeSec,
+      reoptimizationCount: raw.reoptimization_count ?? raw.reoptimizationCount ?? fallback.reoptimizationCount,
+      algorithmBenchmarks: raw.algorithm_benchmarks ?? raw.algorithmBenchmarks ?? fallback.algorithmBenchmarks,
+      qpsoAnalytics: raw.qpso_analytics ?? raw.qpsoAnalytics ?? fallback.qpsoAnalytics,
+      trafficAnalytics: raw.traffic_analytics ?? raw.trafficAnalytics ?? fallback.trafficAnalytics,
+      optimizationHistory: raw.optimization_history ?? raw.optimizationHistory ?? fallback.optimizationHistory,
+    };
+  } catch {
+    return fallback;
+  }
+}
+

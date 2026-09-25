@@ -7,9 +7,8 @@ import { Play, Pause, AlertTriangle, Activity, FlaskConical, Radio } from "lucid
 import { LiveOperationsMap } from "./LiveOperationsMap";
 import { DataModeBadge, SourceFreshnessPanel } from "./LiveModeBadge";
 import { useLiveFleet } from "@/hooks/useLiveFleet";
-import { getApiBaseUrl } from "@/const";
 
-const API_BASE_URL = getApiBaseUrl();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 interface SimStatus {
   running: boolean;

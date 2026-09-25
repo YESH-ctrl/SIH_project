@@ -71,15 +71,9 @@ export function LiveOperationsMap({ selectedVehicleId, onSelectVehicle, height =
         sources: {
           "osm-tiles": {
             type: "raster",
-            tiles: [
-              "https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
-              "https://b.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
-              "https://c.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
-              "https://d.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
-              "https://cartodb-basemaps-a.global.ssl.fastly.net/rastertiles/dark_all/{z}/{x}/{y}.png",
-            ],
+            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
             tileSize: 256,
-            attribution: "© OpenStreetMap contributors © CARTO",
+            attribution: "© OpenStreetMap contributors",
           },
         },
         layers: [{ id: "osm-tiles", type: "raster", source: "osm-tiles" }],

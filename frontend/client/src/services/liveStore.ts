@@ -3,10 +3,10 @@
 // Replaces direct QFlowDataStore fake-data dependencies for LIVE operations.
 // Every record carries provenance (mode/source) so the UI can never present
 // SIMULATION data as LIVE data.
-import { getApiBaseUrl, getWsBaseUrl } from "@/const";
+// ─────────────────────────────────────────────────────────────────────────────
 
-const API_BASE_URL = getApiBaseUrl();
-const WS_BASE_URL = getWsBaseUrl();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || "";
 
 export type DataMode = "LIVE" | "SIMULATION" | "TEST" | "UNKNOWN";
 export type TrackingStatus = "LIVE" | "DEGRADED" | "STALE" | "OFFLINE";

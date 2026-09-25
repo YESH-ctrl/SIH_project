@@ -1,6 +1,6 @@
-import { getApiBaseUrl } from "@/const";
+// Q-FLOW Frontend API Client connecting to FastAPI backend
 
-const API_BASE_URL = getApiBaseUrl();
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
 export async function fetchFromApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
