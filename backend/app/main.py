@@ -56,12 +56,19 @@ async def on_startup():
     # Warn loudly if a live deployment lacks the telemetry shared secret.
     if settings.ENVIRONMENT == "production" and not settings.GPS_AUTH_SECRET:
         logger.warning("GPS_AUTH_SECRET is not set — telemetry endpoint is unauthenticated!")
-    await pipeline_orchestrator.start_workers()
+    try:
+        await pipeline_orchestrator.start_workers()
+    except Exception as exc:
+        logger.warning("Pipeline background workers started with serverless notice: %s", exc)
 
 
 @app.on_event("shutdown")
 async def on_shutdown():
-    await pipeline_orchestrator.stop_workers()
+    try:
+        await pipeline_orchestrator.stop_workers()
+    except Exception:
+        pass
+
 
 
 # Health Check Endpoints (Section 21: /api/health + /api/v1/system/status)
