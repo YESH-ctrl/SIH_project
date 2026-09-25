@@ -1,0 +1,4 @@
+# Ignore backend Python code and tracker when deploying Frontend SPA on Vercel
+backend/
+scratch/
+*.py
