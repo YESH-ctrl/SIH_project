@@ -24,6 +24,10 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
+# Export handler for Vercel Serverless Function entrypoint
+handler = app
+
+
 # Configure CORS Middleware
 app.add_middleware(
     CORSMiddleware,

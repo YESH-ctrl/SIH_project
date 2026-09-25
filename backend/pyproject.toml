@@ -31,3 +31,7 @@ dependencies = [
 minversion = "8.0"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[tool.vercel]
+entrypoint = "app/main.py"
+
